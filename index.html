@@ -324,11 +324,16 @@ function spin() {
 
     const durations = [1.0, 1.4, 1.8, 2.2, 2.6];
 
+    // We'll store the final visible symbols per reel so we can reset accurately later
+    const finalVisiblePerReel = finalGrid[1].map((mid, col) => ({
+        top: finalGrid[0][col],
+        mid: mid,
+        bot: finalGrid[2][col]
+    }));
+
     reelStrips.forEach((strip, col) => {
-        const t = finalGrid[0][col];
-        const m = finalGrid[1][col];
-        const b = finalGrid[2][col];
-        const distance = prepareStrip(strip, t, m, b);
+        const { top, mid, bot } = finalVisiblePerReel[col];
+        const distance = prepareStrip(strip, top, mid, bot);
         strip.style.transition = 'none';
         strip.style.transform = 'translateY(0)';
         strip.offsetHeight; // force reflow
@@ -340,19 +345,19 @@ function spin() {
     setTimeout(() => {
         checkWins(finalGrid);
 
-        // Reset reel positions after win animation & celebration
-        // This centers the visible 3 symbols again and prevents "extending downward"
-        reelStrips.forEach(strip => {
+        // After win check & celebration → lock reels in centered position
+        reelStrips.forEach((strip) => {
+            // Disable animation during reset
             strip.style.transition = 'none';
-            // Reset to show the middle of the short strip (buffer + 1.5 symbols)
-            const resetY = - (100 * (extraSymbols / 2 - 1.5)); // adjust based on your extraSymbols
-            strip.style.transform = `translateY(${resetY}px)`;
+            // Center the visible 3 symbols: move strip so middle symbol is at reel center
+            // Assuming buffer + visible + buffer layout, center = buffer + 1 symbol up
+            const centerOffset = - (100 * (extraSymbols / 2 + 1)); // adjust if extraSymbols changes
+            strip.style.transform = `translateY(${centerOffset}px)`;
         });
 
         spinButton.disabled = false;
-    }, 3200);
+    }, 3200); // 3200ms = long enough for longest spin (2.6s) + win celebration
 }
-
 function checkWins(grid){
     let totalWin=0;
     let winningPaylines=[];
@@ -423,5 +428,6 @@ modal.addEventListener('click',e=>{if(e.target===modal)modal.style.display='none
 </script>
 </body>
 </html>
+
 
 
