@@ -118,11 +118,10 @@
         }
         .reel-highlight {
             position: absolute;
-            inset: 0;
-            background: rgba(255, 255, 0, 0);
-            transition: background 0.4s;
+            inset: 0 0 0 0;
             pointer-events: none;
             z-index: 2;
+            transition: background 0.4s;
         }
         .reel-highlight.won {
             background: rgba(255, 215, 0, 0.35);
@@ -148,33 +147,12 @@
             margin: 15px 0 10px;
             font-weight: bold;
         }
-        #spin-button:hover {
-            background-color: #FFEC8B;
-        }
-        #spin-button:disabled {
-            background: #555;
-            cursor: not-allowed;
-        }
-        #balance {
-            font-size: 28px;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        #message {
-            font-size: 20px;
-            color: #FFD700;
-            min-height: 30px;
-        }
-        #message.win {
-            color: #FFEB3B;
-            font-size: 24px;
-            text-shadow: 0 0 12px #FFD700;
-            animation: bounce 0.5s;
-        }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
-        }
+        #spin-button:hover { background-color: #FFEC8B; }
+        #spin-button:disabled { background: #555; cursor: not-allowed; }
+        #balance { font-size: 28px; margin-bottom: 10px; font-weight: bold; }
+        #message { font-size: 20px; color: #FFD700; min-height: 30px; }
+        #message.win { color: #FFEB3B; font-size: 24px; text-shadow: 0 0 12px #FFD700; animation: bounce 0.5s; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
     </style>
 </head>
 <body>
@@ -197,8 +175,6 @@
                 <div class="reel"><div class="reel-strip"></div><div class="reel-highlight"></div></div>
                 <div class="reel"><div class="reel-strip"></div><div class="reel-highlight"></div></div>
             </div>
-
-            <!-- Payline elements -->
             <div class="payline" id="payline-top" style="top: 50px;"></div>
             <div class="payline" id="payline-center" style="top: 150px;"></div>
             <div class="payline" id="payline-bottom" style="top: 250px;"></div>
@@ -232,52 +208,45 @@
         const extraSymbols = 25;
         const winAmounts = { '🌱': 20, '🌿': 30, '🌳': 50, '🛠️': 40, '💧': 25 };
 
+        // Audio functions (shortened for brevity - keep your originals if preferred)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        function playSound(freq, dur, type = 'sine') {
-            const osc = audioCtx.createOscillator();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            const gain = audioCtx.createGain();
-            gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur/1000);
-            osc.stop(audioCtx.currentTime + dur/1000);
+        function playSound(f, d, t = 'sine') {
+            const o = audioCtx.createOscillator(); o.type = t; o.frequency.value = f;
+            const g = audioCtx.createGain(); g.gain.value = 0.4;
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d/1000);
+            o.stop(audioCtx.currentTime + d/1000);
         }
-
-        function playSpinSound() { /* same as before */ playSound(700,250,'sawtooth'); setTimeout(()=>playSound(550,250,'sawtooth'),150); /* ... */ }
+        function playSpinSound() { playSound(700,250,'sawtooth'); setTimeout(()=>playSound(550,250,'sawtooth'),150); }
         function playStopSound() { playSound(120,120,'square'); }
         function playSmallWinSound() { playSound(523,300); setTimeout(()=>playSound(659,300),200); }
-        function playBigWinSound() { /* fanfare */ playSound(440,250); /* ... */ }
-        function playMegaSound() { playBigWinSound(); setTimeout(()=>{playSound(880,300); setTimeout(()=>playSound(1046,600),250);},1400); }
+        function playBigWinSound() { playSound(440,250); setTimeout(()=>playSound(659,350),250); }
+        function playMegaSound() { playBigWinSound(); setTimeout(()=>playSound(880,400),800); }
 
-        function getRandomSymbol() {
-            return symbols[Math.floor(Math.random() * symbols.length)];
-        }
+        function getRandomSymbol() { return symbols[Math.floor(Math.random() * symbols.length)]; }
 
         function createStrip(strip) {
             strip.innerHTML = '';
             for (let i = 0; i < visibleSymbols + extraSymbols; i++) {
-                const sym = document.createElement('div');
-                sym.classList.add('symbol');
-                sym.textContent = getRandomSymbol();
-                strip.appendChild(sym);
+                const s = document.createElement('div');
+                s.classList.add('symbol');
+                s.textContent = getRandomSymbol();
+                strip.appendChild(s);
             }
         }
 
-        function prepareStrip(strip, finalSymbol) {
+        // Returns spin distance and sets final middle symbol
+        function prepareStrip(strip, finalMiddleSymbol) {
             strip.innerHTML = '';
             for (let i = 0; i < visibleSymbols + extraSymbols; i++) {
-                const sym = document.createElement('div');
-                sym.classList.add('symbol');
-                sym.textContent = getRandomSymbol();
-                strip.appendChild(sym);
+                const s = document.createElement('div');
+                s.classList.add('symbol');
+                s.textContent = getRandomSymbol();
+                strip.appendChild(s);
             }
             const spinAmount = extraSymbols - Math.floor(Math.random() * visibleSymbols);
             const midPos = spinAmount + 1;
-            strip.children[midPos].textContent = finalSymbol;
+            strip.children[midPos].textContent = finalMiddleSymbol;
             return spinAmount * symbolHeight;
         }
 
@@ -288,26 +257,18 @@
 
         function setActivePaylines(num) {
             activePaylines = num;
-            lineButtons.forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`.line-btn[data-lines="${num}"]`).classList.add('active');
-
-            Object.values(paylines).forEach(pl => pl.classList.remove('active'));
-            if (num >= 1) paylines.center.classList.add('active');
-            if (num >= 2) paylines.top.classList.add('active');
-            if (num >= 3) paylines.bottom.classList.add('active');
-
+            lineButtons.forEach(b => b.classList.toggle('active', parseInt(b.dataset.lines) === num));
+            paylines.top.classList.toggle('active', num >= 2);
+            paylines.center.classList.toggle('active', num >= 1);
+            paylines.bottom.classList.toggle('active', num >= 3);
             updateBetDisplay();
         }
 
-        lineButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                setActivePaylines(parseInt(btn.dataset.lines));
-            });
-        });
+        lineButtons.forEach(btn => btn.addEventListener('click', () => setActivePaylines(parseInt(btn.dataset.lines))));
 
         function clearAllHighlights() {
             reelHighlights.forEach(h => h.classList.remove('won'));
-            Object.values(paylines).forEach(pl => pl.classList.remove('won'));
+            Object.values(paylines).forEach(p => p.classList.remove('won'));
         }
 
         function spin() {
@@ -321,59 +282,69 @@
             balance -= bet;
             balanceDisplay.textContent = `Seed Credits: ${balance}`;
             messageDisplay.textContent = '';
+            messageDisplay.classList.remove('win');
             spinButton.disabled = true;
 
-            const finalSymbols = Array(5).fill().map(getRandomSymbol);
+            // Decide final middle symbols for each reel
+            const finalMiddles = Array(5).fill().map(getRandomSymbol);
 
-            // Spin animation
+            // Also build the 3-row visible grid right now (top/middle/bottom will be set after spin)
+            const finalGrid = [
+                Array(5).fill(''), // row 0 = top
+                finalMiddles,      // row 1 = middle
+                Array(5).fill('')  // row 2 = bottom
+            ];
+
             const durations = [1.0, 1.4, 1.8, 2.2, 2.6];
+
             reelStrips.forEach((strip, i) => {
-                const distance = prepareStrip(strip, finalSymbols[i]);
+                const distance = prepareStrip(strip, finalMiddles[i]);
                 strip.style.transition = 'none';
                 strip.style.transform = 'translateY(0)';
-                strip.offsetHeight;
+                strip.offsetHeight; // reflow
                 strip.style.transition = `transform ${durations[i]}s ease-out`;
                 strip.style.transform = `translateY(-${distance}px)`;
-                setTimeout(playStopSound, durations[i] * 1000 - 80);
+
+                // After this reel's spin ends, set top & bottom symbols (visual only)
+                setTimeout(() => {
+                    const children = strip.children;
+                    if (children[spinAmount])     finalGrid[0][i] = children[spinAmount].textContent;
+                    if (children[spinAmount + 2]) finalGrid[2][i] = children[spinAmount + 2].textContent;
+                    playStopSound();
+                }, durations[i] * 1000);
             });
 
             setTimeout(() => {
-                checkWins(finalSymbols);
+                checkWins(finalGrid);
                 spinButton.disabled = false;
-            }, 3000);
+            }, 3200);
         }
 
-        function checkWins(finalSymbols) {
+        function checkWins(grid) {
             let totalWin = 0;
             let winningPaylines = [];
 
-            const linesToCheck = [];
-            if (activePaylines >= 1) linesToCheck.push({name: 'center', row: 1, el: paylines.center});
-            if (activePaylines >= 2) linesToCheck.push({name: 'top',    row: 0, el: paylines.top});
-            if (activePaylines >= 3) linesToCheck.push({name: 'bottom', row: 2, el: paylines.bottom});
+            const lines = [];
+            if (activePaylines >= 1) lines.push({name: 'center', row: 1, el: paylines.center});
+            if (activePaylines >= 2) lines.push({name: 'top',    row: 0, el: paylines.top});
+            if (activePaylines >= 3) lines.push({name: 'bottom', row: 2, el: paylines.bottom});
 
-            linesToCheck.forEach(line => {
-                const rowSymbols = finalSymbols.map((_, col) => {
-                    const strip = reelStrips[col];
-                    const index = line.row + 1; // middle of visible = index 1 after spin
-                    return strip.children[index]?.textContent || '';
-                });
-
+            lines.forEach(line => {
+                const rowSym = grid[line.row];
                 let i = 0;
-                while (i < rowSymbols.length) {
+                while (i < rowSym.length) {
                     let j = i + 1;
-                    while (j < rowSymbols.length && rowSymbols[j] === rowSymbols[i]) j++;
+                    while (j < rowSym.length && rowSym[j] === rowSym[i]) j++;
                     const len = j - i;
                     if (len >= 2) {
-                        const sym = rowSymbols[i];
-                        let payout = 0;
-                        if (len === 2) payout = 10;
-                        else if (len === 3) payout = winAmounts[sym] * 2;
-                        else if (len === 4) payout = winAmounts[sym] * 5;
-                        else if (len === 5) payout = winAmounts[sym] * 10;
-
+                        const sym = rowSym[i];
+                        let payout = len === 2 ? 10 :
+                                     len === 3 ? winAmounts[sym] * 2 :
+                                     len === 4 ? winAmounts[sym] * 5 :
+                                     len === 5 ? winAmounts[sym] * 10 : 0;
                         totalWin += payout;
-                        // Highlight winning symbols on this line
+
+                        // Highlight winning reels
                         for (let k = i; k < j; k++) {
                             reelHighlights[k].classList.add('won');
                         }
@@ -387,24 +358,19 @@
             if (totalWin > 0) {
                 balance += totalWin;
                 balanceDisplay.textContent = `Seed Credits: ${balance}`;
-                messageDisplay.textContent = `WIN! +${totalWin} seeds on ${winningPaylines.join(', ')}! 🎉`;
+                messageDisplay.textContent = `WIN! +${totalWin} seeds (${winningPaylines.join(', ')})! 🎉`;
                 messageDisplay.classList.add('win');
 
                 if (totalWin >= 200) playMegaSound();
                 else if (totalWin >= 50) playBigWinSound();
                 else playSmallWinSound();
 
-                // Shake winning reels
                 setTimeout(() => {
                     reelHighlights.forEach((h,i) => {
-                        if (h.classList.contains('won')) {
-                            reels[i].style.animation = 'win-shake 0.8s';
-                        }
+                        if (h.classList.contains('won')) reels[i].style.animation = 'win-shake 0.8s';
                     });
-                    setTimeout(() => {
-                        reels.forEach(r => r.style.animation = '');
-                    }, 800);
-                }, 400);
+                    setTimeout(() => reels.forEach(r => r.style.animation = ''), 800);
+                }, 300);
             } else {
                 messageDisplay.textContent = 'No growth this time... Try again!';
             }
@@ -412,7 +378,7 @@
             setTimeout(clearAllHighlights, 5000);
         }
 
-        // Init
+        // Initialize
         reelStrips.forEach(createStrip);
         setActivePaylines(1);
         spinButton.addEventListener('click', spin);
