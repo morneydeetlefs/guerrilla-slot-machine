@@ -115,6 +115,43 @@
             '💧': 25   // Water: Essential boost
         };
 
+        // Audio setup
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(frequency, duration, type = 'sine') {
+            const oscillator = audioCtx.createOscillator();
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+            const gainNode = audioCtx.createGain();
+            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); // Volume
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start();
+            setTimeout(() => {
+                oscillator.stop();
+            }, duration);
+        }
+
+        function playSpinSound() {
+            // Simple descending tone for spinning
+            playSound(600, 200, 'sawtooth');
+            setTimeout(() => playSound(500, 200, 'sawtooth'), 200);
+            setTimeout(() => playSound(400, 200, 'sawtooth'), 400);
+        }
+
+        function playStopSound() {
+            // Thump for reel stop
+            playSound(100, 100, 'square');
+        }
+
+        function playWinSound() {
+            // Simple fanfare
+            playSound(440, 200);
+            setTimeout(() => playSound(554, 200), 200);
+            setTimeout(() => playSound(659, 200), 400);
+            setTimeout(() => playSound(880, 400), 600);
+        }
+
         function getRandomSymbol() {
             return symbols[Math.floor(Math.random() * symbols.length)];
         }
@@ -129,72 +166,6 @@
             }
         }
 
-        function spinReel(reelStrip, finalSymbol, delay) {
-            // Reset to top
-            reelStrip.style.transition = 'none';
-            reelStrip.style.transform = `translateY(0px)`;
-            
-            // Force reflow
-            reelStrip.offsetHeight;
-            
-            // Set spin
-            const spinDistance = (extraSymbols + Math.floor(Math.random() * visibleSymbols)) * symbolHeight;
-            reelStrip.style.transition = 'transform 1.5s ease-out';
-            reelStrip.style.transform = `translateY(-${spinDistance}px)`;
-
-            // After animation, set the middle symbol to final (but since it's random strip, calculate stop position)
-            // Actually, to land on specific, prepend symbols to make final in middle
-            // But for simplicity, after spin, adjust the last few symbols
-            setTimeout(() => {
-                // Get current children
-                const syms = Array.from(reelStrip.children);
-                
-                // Set bottom (visible[2]), middle[1], top[0] but since translated, the visible are the last 3
-                // To make middle finalSymbol, set the (extra + 1)th to final (since spinDistance lands last-visible at middle? Wait.
-                // Easier: After animation, snap to nearest, but to control, let's calculate stop to have final in middle.
-                
-                // Since random strip, to force final in middle: After generating random strip, override the one that will be in middle.
-                // But since spin is random distance, choose distance so that a specific index is in middle.
-                
-                // Let's define: After spin, the translateY will be such that the (spinCycles * total + offset) symbol is at top.
-                // Simple way: Generate strip with extra, spin by large amount, then at end, set translateY to - (totalHeight - reelHeight / 2 + symbolHeight / 2) but to control.
-                
-                // Better: Decide the final position first.
-                // The visible symbols will be index N, N+1, N+2 where N is chosen so N+1 is the winning one.
-                // But the winning symbol is the middle one.
-                
-                // So, for each reel, choose the final middle symbol, then build the strip with random, but set the 'landing' position.
-                // Choose a random stopIndex for the strip, and set the symbol at stopIndex +1 to finalSymbol.
-                
-                const stopIndex = Math.floor(Math.random() * extraSymbols); // Which 'start' for the last spin
-                const middleIndex = visibleSymbols / 2; // 1 for 3 visible
-                syms[stopIndex + 1].textContent = finalSymbol; // Set the one that will be middle
-                
-                // The translateY to land stopIndex at top of visible
-                const finalTranslate = - (stopIndex * symbolHeight);
-                reelStrip.style.transform = `translateY(${finalTranslate}px)`;
-            }, 1500 + delay); // No, wait, this is after the initial spin animation.
-            
-            // Actually, to have smooth stop, the transition is the spin, but to force the symbol, I need to set it before spin or after without notice.
-            // Let's set the final symbols after the animation ends.
-            // But to avoid jump, set them all random, spin, then no need to set specific during, but wait, the finalSymbols are the middle ones after stop.
-            
-            // Wait, to fix, let's change approach: The finalSymbol is the middle after stop.
-            // But to get it, after animation end, get the middle visible symbol.
-            // But to control win, I need to choose finalSymbol first, then make the strip land on it.
-            // Yes, so:
-            // Before spin, generate strip random, but override a specific position with finalSymbol.
-            // Choose a random spinCycles (e.g., 5 + random), then the position = cycles * symbols.length or something, but since symbols are random, but to make it simple.
-            
-            // Here's a clean way:
-            // Generate a long strip of random symbols.
-            // Choose a random spinAmount (number of symbols to shift).
-            // Set the symbol at spinAmount +1 (for middle) to finalSymbol.
-            // Then animate translateY - (spinAmount * height)
-            
-            // Yes!
-        }
-
         function prepareStrip(reelStrip, finalSymbol) {
             reelStrip.innerHTML = '';
             for (let i = 0; i < visibleSymbols + extraSymbols; i++) {
@@ -203,9 +174,8 @@
                 symbol.textContent = getRandomSymbol();
                 reelStrip.appendChild(symbol);
             }
-            const spinAmount =  extraSymbols - Math.floor(Math.random() * 3); // Vary a bit for different stops
-            const middlePosition = spinAmount + 1; // 0 is top, 1 middle, 2 bottom for visible after translate
-            // After translate - (spinAmount * height), the symbol at index spinAmount will be at top of reel, spinAmount+1 at middle, spinAmount+2 at bottom.
+            const spinAmount = extraSymbols - Math.floor(Math.random() * 3); // Vary a bit for different stops
+            const middlePosition = spinAmount + 1; // Assuming 0 top, 1 middle, 2 bottom
             reelStrip.children[middlePosition].textContent = finalSymbol;
             return spinAmount * symbolHeight;
         }
@@ -222,33 +192,50 @@
             spinButton.disabled = true;
 
             const finalSymbols = reels.map(() => getRandomSymbol());
+
+            playSpinSound(); // Play initial spin sound
+
+            const durations = [1.5, 2.0, 2.5]; // Sequential stop times
+            const maxDuration = Math.max(...durations) * 1000 + 200; // Buffer
+
             reelStrips.forEach((reelStrip, index) => {
                 const spinDistance = prepareStrip(reelStrip, finalSymbols[index]);
                 reelStrip.style.transition = 'none';
                 reelStrip.style.transform = 'translateY(0px)';
                 reelStrip.offsetHeight; // Reflow
-                reelStrip.style.transition = 'transform 1.5s ease-out';
+                reelStrip.style.transition = `transform ${durations[index]}s ease-out`;
                 reelStrip.style.transform = `translateY(-${spinDistance}px)`;
+
+                // Play stop sound at end of each reel's animation
+                setTimeout(() => {
+                    playStopSound();
+                }, durations[index] * 1000 - 100); // Slightly before full stop
             });
 
             setTimeout(() => {
                 checkWin(finalSymbols);
                 spinButton.disabled = false;
-            }, 2000); // Slightly longer for animation
+            }, maxDuration);
         }
 
         function checkWin(finalSymbols) {
+            let isWin = false;
             if (finalSymbols[0] === finalSymbols[1] && finalSymbols[1] === finalSymbols[2]) {
                 const winAmount = winAmounts[finalSymbols[0]] || 0;
                 balance += winAmount * 2; // Double for guerrilla bonus!
                 messageDisplay.textContent = `Success! Planted ${finalSymbols[0]} x3 - +${winAmount * 2} seeds!`;
+                isWin = true;
             } else if (finalSymbols[0] === finalSymbols[1] || finalSymbols[1] === finalSymbols[2] || finalSymbols[0] === finalSymbols[2]) {
                 balance += 10; // Small win for partial match
                 messageDisplay.textContent = 'Partial plant! +10 seeds.';
+                isWin = true; // Treat partial as minor win for sound
             } else {
                 messageDisplay.textContent = 'No growth this time. Try again!';
             }
             updateBalance();
+            if (isWin) {
+                playWinSound();
+            }
         }
 
         function updateBalance() {
