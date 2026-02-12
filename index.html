@@ -86,12 +86,22 @@
     // Constants & Configuration
     // ────────────────────────────────────────────────
     const symbols = ['🌱', '🌿', '🌳', '🛠️', '💧'];
+
     const symbolNames = {
         '🌱': 'Seed Packet',
         '🌿': 'Herb Cutting',
         '🌳': 'Young Tree',
         '🛠️': 'Gardening Tool',
         '💧': 'Watering Can'
+    };
+
+    // Rarity system
+    const rarityData = {
+        '🌱': { tier: 'Common',    color: '#e0e0e0',  multiplier: 1.0,  badge: 'C' },
+        '💧': { tier: 'Uncommon',  color: '#81d4fa',  multiplier: 1.5,  badge: 'U' },
+        '🌿': { tier: 'Rare',      color: '#66bb6a',  multiplier: 2.0,  badge: 'R' },
+        '🛠️': { tier: 'Epic',      color: '#ab47bc',  multiplier: 3.0,  badge: 'E' },
+        '🌳': { tier: 'Legendary', color: '#ffb300',  multiplier: 5.0,  badge: 'L' }
     };
 
     const winAmounts = {
@@ -146,35 +156,11 @@
         osc.stop(audioCtx.currentTime + duration / 1000);
     }
 
-    function playSpinSound() {
-        playSound(700, 250, 'sawtooth');
-        setTimeout(() => playSound(550, 250, 'sawtooth'), 150);
-        setTimeout(() => playSound(400, 300, 'sawtooth'), 350);
-    }
-
-    function playStopSound() {
-        playSound(120, 120, 'square');
-    }
-
-    function playSmallWinSound() {
-        playSound(523, 300);
-        setTimeout(() => playSound(659, 300), 200);
-    }
-
-    function playBigWinSound() {
-        playSound(440, 250);
-        setTimeout(() => playSound(554, 250), 200);
-        setTimeout(() => playSound(659, 250), 450);
-        setTimeout(() => playSound(784, 400), 700);
-    }
-
-    function playMegaSound() {
-        playBigWinSound();
-        setTimeout(() => {
-            playSound(880, 300);
-            setTimeout(() => playSound(1046, 600), 250);
-        }, 1400);
-    }
+    function playSpinSound() { playSound(700,250,'sawtooth'); setTimeout(()=>playSound(550,250,'sawtooth'),150); setTimeout(()=>playSound(400,300,'sawtooth'),350); }
+    function playStopSound() { playSound(120,120,'square'); }
+    function playSmallWinSound() { playSound(523,300); setTimeout(()=>playSound(659,300),200); }
+    function playBigWinSound() { playSound(440,250); setTimeout(()=>playSound(554,250),200); setTimeout(()=>playSound(659,250),450); setTimeout(()=>playSound(784,400),700); }
+    function playMegaSound() { playBigWinSound(); setTimeout(()=>{playSound(880,300); setTimeout(()=>playSound(1046,600),250);},1400); }
 
     // ────────────────────────────────────────────────
     // Utility Functions
@@ -240,13 +226,25 @@
             return;
         }
 
+        entries.sort((a,b) => {
+            // Sort by rarity (legendary first)
+            const order = ['Legendary','Epic','Rare','Uncommon','Common'];
+            return order.indexOf(rarityData[a[0]].tier) - order.indexOf(rarityData[b[0]].tier);
+        });
+
         entries.forEach(([sym, count]) => {
+            const rarity = rarityData[sym];
             const li = document.createElement('li');
             li.className = 'item';
+            li.style.borderColor = rarity.color;
+            li.style.boxShadow = `0 0 8px ${rarity.color}80`;
             li.innerHTML = `
-                ${sym}
-                <span class="item-count">${count}</span>
-                <div style="font-size:12px; margin-top:4px;">${symbolNames[sym]}</div>
+                <div style="font-size:48px;">${sym}</div>
+                <div style="font-size:11px; opacity:0.9; margin:4px 0 2px;">${symbolNames[sym]}</div>
+                <div style="font-size:11px; color:${rarity.color}; font-weight:bold;">
+                    ${rarity.tier} • ×${rarity.multiplier}
+                </div>
+                <span class="item-count" style="background:${rarity.color}; color:#000;">${count}</span>
             `;
             wonItemsList.appendChild(li);
         });
@@ -315,10 +313,14 @@
                 const len = j - i;
                 if (len >= 2) {
                     const sym = rowSym[i];
-                    let payout = len === 2 ? 10 :
-                                 len === 3 ? winAmounts[sym] * 2 :
-                                 len === 4 ? winAmounts[sym] * 5 :
-                                 len === 5 ? winAmounts[sym] * 10 : 0;
+                    const basePayout = len === 2 ? 10 :
+                                       len === 3 ? winAmounts[sym] * 2 :
+                                       len === 4 ? winAmounts[sym] * 5 :
+                                       len === 5 ? winAmounts[sym] * 10 : 0;
+
+                    // Apply rarity multiplier to credits won
+                    const rarityMult = rarityData[sym]?.multiplier || 1;
+                    const payout = Math.round(basePayout * rarityMult);
 
                     totalWin += payout;
                     wonItemsThisSpin.add(sym);
@@ -347,7 +349,7 @@
             messageDisplay.textContent = msg;
             messageDisplay.classList.add('win');
 
-            if (totalWin >= 200 || wonItemsThisSpin.size >= 3) playMegaSound();
+            if (totalWin >= 200 || wonItemsThisSpin.has('🌳')) playMegaSound();
             else if (totalWin >= 50 || wonItemsThisSpin.size >= 2) playBigWinSound();
             else playSmallWinSound();
 
@@ -380,4 +382,5 @@
 </script>
 </body>
 </html>
+
 
