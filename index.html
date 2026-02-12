@@ -46,8 +46,16 @@
         .line-btn.active { background: #FFD700; color: #004d00; box-shadow: 0 0 10px #FFD700; }
         .reels-container { position: relative; height: calc(var(--reel-size) * 3); margin: 12px 0; width: 100%; max-width: 420px; }
         .reels { display: flex; justify-content: center; gap: 6px; height: 100%; }
-        .reel { width: var(--reel-size); height: 100%; background: white; border: 2px solid #222; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
-        .reel-strip { position: absolute; top: 0; left: 0; width: 100%; transition: transform 2s ease-out; }
+        .reel {
+    overflow: hidden !important; /* enforce clipping */
+    position: relative;
+}
+
+.reel-strip {
+    will-change: transform; /* smoother animation */
+    /* Optional: clip any overflow beyond visible area */
+    clip-path: inset(0); 
+}
         .symbol { height: var(--symbol-size); width: 100%; display: flex; align-items: center; justify-content: center; font-size: calc(var(--reel-size) * 0.65); }
         .payline { position: absolute; left: 0; right: 0; height: 3px; background: linear-gradient(to right, transparent, #FFD700 20%, #FFD700 80%, transparent); opacity: 0.3; z-index: 3; pointer-events: none; }
         .payline.active { opacity: 0.75; box-shadow: 0 0 8px #FFD700; }
@@ -207,16 +215,27 @@ function createStrip(strip){
     }
 }
 
-function prepareStrip(strip,topSym,midSym,botSym){
-    strip.innerHTML='';
-    for(let i=0;i<visibleSymbols+extraSymbols;i++){
-        const s=document.createElement('div');s.classList.add('symbol');s.textContent=getRandomSymbol();strip.appendChild(s);
+function prepareStrip(strip, topSym, midSym, botSym) {
+    strip.innerHTML = '';
+    // Build a short strip with just enough buffer + the three visible symbols
+    const buffer = 5; // small buffer for spin feel
+    for (let i = 0; i < buffer + visibleSymbols + buffer; i++) {
+        const s = document.createElement('div');
+        s.classList.add('symbol');
+        s.textContent = getRandomSymbol();
+        strip.appendChild(s);
     }
-    const spinAmount=extraSymbols-Math.floor(Math.random()*4);
-    strip.children[spinAmount].textContent=topSym;
-    strip.children[spinAmount+1].textContent=midSym;
-    strip.children[spinAmount+2].textContent=botSym;
-    return spinAmount*100;
+    // Force the visible three into the middle of the visible area
+    const startPos = buffer; // top at index buffer
+    strip.children[startPos].textContent     = topSym;
+    strip.children[startPos + 1].textContent = midSym;
+    strip.children[startPos + 2].textContent = botSym;
+
+    // Choose random extra spin distance within buffer
+    const extraSpin = Math.floor(Math.random() * buffer);
+    const spinAmount = startPos + extraSpin;
+    const distance = spinAmount * 100; // symbolHeight = 100
+    return distance;
 }
 
 function updateBetDisplay(){
@@ -283,39 +302,55 @@ function renderInventory(){
 }
 
 // Core Game
-function spin(){
-    const bet=baseBet*activePaylines;
-    if(balance<bet){
-        messageDisplay.textContent='Not enough planting credits! Refresh to restart.';
+function spin() {
+    const bet = baseBet * activePaylines;
+    if (balance < bet) {
+        messageDisplay.textContent = 'Not enough planting credits! Refresh to restart.';
         return;
     }
-    clearAllHighlights();
-    balance-=bet;
-    balanceDisplay.textContent=`Planting Credits: ${balance}`;
-    messageDisplay.textContent='';
-    messageDisplay.classList.remove('win');
-    spinButton.disabled=true;
 
-    const finalGrid=[
+    clearAllHighlights();
+    balance -= bet;
+    balanceDisplay.textContent = `Planting Credits: ${balance}`;
+    messageDisplay.textContent = '';
+    messageDisplay.classList.remove('win');
+    spinButton.disabled = true;
+
+    const finalGrid = [
         Array(5).fill().map(getRandomSymbol),
         Array(5).fill().map(getRandomSymbol),
         Array(5).fill().map(getRandomSymbol)
     ];
 
-    const durations=[1.0,1.4,1.8,2.2,2.6];
+    const durations = [1.0, 1.4, 1.8, 2.2, 2.6];
 
-    reelStrips.forEach((strip,col)=>{
-        const t=finalGrid[0][col],m=finalGrid[1][col],b=finalGrid[2][col];
-        const distance=prepareStrip(strip,t,m,b);
-        strip.style.transition='none';
-        strip.style.transform='translateY(0)';
-        strip.offsetHeight;
-        strip.style.transition=`transform ${durations[col]}s ease-out`;
-        strip.style.transform=`translateY(-${distance}px)`;
-        setTimeout(playStopSound,durations[col]*1000-80);
+    reelStrips.forEach((strip, col) => {
+        const t = finalGrid[0][col];
+        const m = finalGrid[1][col];
+        const b = finalGrid[2][col];
+        const distance = prepareStrip(strip, t, m, b);
+        strip.style.transition = 'none';
+        strip.style.transform = 'translateY(0)';
+        strip.offsetHeight; // force reflow
+        strip.style.transition = `transform ${durations[col]}s ease-out`;
+        strip.style.transform = `translateY(-${distance}px)`;
+        setTimeout(playStopSound, durations[col] * 1000 - 80);
     });
 
-    setTimeout(()=>{checkWins(finalGrid);spinButton.disabled=false;},3200);
+    setTimeout(() => {
+        checkWins(finalGrid);
+
+        // Reset reel positions after win animation & celebration
+        // This centers the visible 3 symbols again and prevents "extending downward"
+        reelStrips.forEach(strip => {
+            strip.style.transition = 'none';
+            // Reset to show the middle of the short strip (buffer + 1.5 symbols)
+            const resetY = - (100 * (extraSymbols / 2 - 1.5)); // adjust based on your extraSymbols
+            strip.style.transform = `translateY(${resetY}px)`;
+        });
+
+        spinButton.disabled = false;
+    }, 3200);
 }
 
 function checkWins(grid){
@@ -388,4 +423,5 @@ modal.addEventListener('click',e=>{if(e.target===modal)modal.style.display='none
 </script>
 </body>
 </html>
+
 
