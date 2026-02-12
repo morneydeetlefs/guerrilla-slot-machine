@@ -22,10 +22,21 @@
             padding: 20px;
             text-align: center;
         }
+        #payline-label {
+            font-size: 20px;
+            color: #FFD700;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .reels-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
         .reels {
             display: flex;
             justify-content: center;
-            margin-bottom: 20px;
+            height: 100%;
         }
         .reel {
             width: 100px;
@@ -54,6 +65,54 @@
             align-items: center;
             font-size: 60px; /* Larger emojis for better visibility */
             box-sizing: border-box;
+        }
+        .reel-highlight {
+            position: absolute;
+            inset: 100px 0 100px 0;
+            background: rgba(255, 255, 0, 0.2);
+            border: 3px solid transparent;
+            border-top: 3px solid #FFD700;
+            border-bottom: 3px solid #FFD700;
+            opacity: 0;
+            transition: opacity 0.3s, box-shadow 0.3s;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .reel-highlight.active {
+            opacity: 1;
+            box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.8);
+            animation: highlight-glow 1s ease-in-out infinite alternate;
+        }
+        @keyframes highlight-glow {
+            from { box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.5); }
+            to { box-shadow: inset 0 0 30px rgba(255, 215, 0, 1); }
+        }
+        .payline {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, transparent 0%, #FFD700 20%, #FFD700 80%, transparent 100%);
+            transform: translateY(-50%);
+            opacity: 0.3;
+            transition: all 0.5s ease;
+            border-radius: 2px;
+            z-index: 3;
+        }
+        .payline.big-win {
+            opacity: 1;
+            box-shadow: 0 0 20px #FFD700;
+            animation: payline-pulse 1.5s infinite;
+        }
+        @keyframes payline-pulse {
+            0%, 100% { transform: translateY(-50%) scaleX(1); }
+            50% { transform: translateY(-50%) scaleX(1.2); }
+        }
+        @keyframes win-shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+            20%, 40%, 60%, 80% { transform: translateX(2px); }
         }
         #spin-button {
             background-color: #FFD700; /* Gold for fortune */
@@ -86,10 +145,23 @@
     <div class="slot-machine">
         <h1>Guerrilla Gardener's Fortune</h1>
         <div id="balance">Seed Credits: 100</div>
-        <div class="reels">
-            <div class="reel" id="reel1"><div class="reel-strip"></div></div>
-            <div class="reel" id="reel2"><div class="reel-strip"></div></div>
-            <div class="reel" id="reel3"><div class="reel-strip"></div></div>
+        <div id="payline-label">Center Line Wins Only! 🎯</div>
+        <div class="reels-container">
+            <div class="reels">
+                <div class="reel" id="reel1">
+                    <div class="reel-strip"></div>
+                    <div class="reel-highlight"></div>
+                </div>
+                <div class="reel" id="reel2">
+                    <div class="reel-strip"></div>
+                    <div class="reel-highlight"></div>
+                </div>
+                <div class="reel" id="reel3">
+                    <div class="reel-strip"></div>
+                    <div class="reel-highlight"></div>
+                </div>
+            </div>
+            <div class="payline"></div>
         </div>
         <button id="spin-button">Spin to Plant!</button>
         <div id="message"></div>
@@ -99,20 +171,22 @@
         const symbols = ['🌱', '🌿', '🌳', '🛠️', '💧']; // Guerrilla gardening symbols
         const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
         const reelStrips = reels.map(reel => reel.querySelector('.reel-strip'));
+        const reelHighlights = reels.map(reel => reel.querySelector('.reel-highlight'));
+        const payline = document.querySelector('.payline');
         const spinButton = document.getElementById('spin-button');
         const balanceDisplay = document.getElementById('balance');
         const messageDisplay = document.getElementById('message');
         let balance = 100;
         const spinCost = 10;
         const symbolHeight = 100;
-        const visibleSymbols = 3; // Visible in the reel window
-        const extraSymbols = 20; // Extra for spinning effect (looping strip)
+        const visibleSymbols = 3;
+        const extraSymbols = 20;
         const winAmounts = {
-            '🌱': 20,  // Seed match: Small win for starting small
-            '🌿': 30,  // Herb: Medium for quick growth
-            '🌳': 50,  // Tree: Big for lasting impact
-            '🛠️': 40, // Tool: Utility win
-            '💧': 25   // Water: Essential boost
+            '🌱': 20,
+            '🌿': 30,
+            '🌳': 50,
+            '🛠️': 40,
+            '💧': 25
         };
 
         // Audio setup
@@ -123,33 +197,34 @@
             oscillator.type = type;
             oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
             const gainNode = audioCtx.createGain();
-            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); // Volume
+            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
             oscillator.start();
-            setTimeout(() => {
-                oscillator.stop();
-            }, duration);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration / 1000);
+            oscillator.stop(audioCtx.currentTime + duration / 1000);
         }
 
         function playSpinSound() {
-            // Simple descending tone for spinning
             playSound(600, 200, 'sawtooth');
-            setTimeout(() => playSound(500, 200, 'sawtooth'), 200);
-            setTimeout(() => playSound(400, 200, 'sawtooth'), 400);
+            setTimeout(() => playSound(500, 200, 'sawtooth'), 150);
+            setTimeout(() => playSound(400, 200, 'sawtooth'), 300);
         }
 
         function playStopSound() {
-            // Thump for reel stop
             playSound(100, 100, 'square');
         }
 
-        function playWinSound() {
-            // Simple fanfare
+        function playSmallWinSound() {
+            playSound(523, 300);
+            setTimeout(() => playSound(659, 300), 200);
+        }
+
+        function playBigWinSound() {
             playSound(440, 200);
             setTimeout(() => playSound(554, 200), 200);
             setTimeout(() => playSound(659, 200), 400);
-            setTimeout(() => playSound(880, 400), 600);
+            setTimeout(() => playSound(880, 500), 600);
         }
 
         function getRandomSymbol() {
@@ -157,7 +232,7 @@
         }
 
         function createStrip(reelStrip) {
-            reelStrip.innerHTML = ''; // Clear previous
+            reelStrip.innerHTML = '';
             for (let i = 0; i < visibleSymbols + extraSymbols; i++) {
                 const symbol = document.createElement('div');
                 symbol.classList.add('symbol');
@@ -174,10 +249,21 @@
                 symbol.textContent = getRandomSymbol();
                 reelStrip.appendChild(symbol);
             }
-            const spinAmount = extraSymbols - Math.floor(Math.random() * 3); // Vary a bit for different stops
-            const middlePosition = spinAmount + 1; // Assuming 0 top, 1 middle, 2 bottom
+            const spinAmount = extraSymbols - Math.floor(Math.random() * 3);
+            const middlePosition = spinAmount + 1;
             reelStrip.children[middlePosition].textContent = finalSymbol;
             return spinAmount * symbolHeight;
+        }
+
+        function clearHighlights() {
+            reelHighlights.forEach(h => h.classList.remove('active'));
+            payline.classList.remove('big-win');
+        }
+
+        function highlightReels(indices) {
+            reelHighlights.forEach((highlight, i) => {
+                highlight.classList.toggle('active', indices.includes(i));
+            });
         }
 
         function spin() {
@@ -186,6 +272,7 @@
                 spinButton.disabled = true;
                 return;
             }
+            clearHighlights();
             balance -= spinCost;
             updateBalance();
             messageDisplay.textContent = '';
@@ -193,23 +280,20 @@
 
             const finalSymbols = reels.map(() => getRandomSymbol());
 
-            playSpinSound(); // Play initial spin sound
+            playSpinSound();
 
-            const durations = [1.5, 2.0, 2.5]; // Sequential stop times
-            const maxDuration = Math.max(...durations) * 1000 + 200; // Buffer
+            const durations = [1.5, 2.0, 2.5];
+            const maxDuration = durations[2] * 1000 + 500;
 
             reelStrips.forEach((reelStrip, index) => {
                 const spinDistance = prepareStrip(reelStrip, finalSymbols[index]);
                 reelStrip.style.transition = 'none';
                 reelStrip.style.transform = 'translateY(0px)';
-                reelStrip.offsetHeight; // Reflow
+                reelStrip.offsetHeight;
                 reelStrip.style.transition = `transform ${durations[index]}s ease-out`;
                 reelStrip.style.transform = `translateY(-${spinDistance}px)`;
 
-                // Play stop sound at end of each reel's animation
-                setTimeout(() => {
-                    playStopSound();
-                }, durations[index] * 1000 - 100); // Slightly before full stop
+                setTimeout(() => playStopSound(), durations[index] * 1000 - 100);
             });
 
             setTimeout(() => {
@@ -219,31 +303,62 @@
         }
 
         function checkWin(finalSymbols) {
-            let isWin = false;
+            let winAmount = 0;
+            let message = '';
+            let isBigWin = false;
+            let highlightIndices = [];
+
             if (finalSymbols[0] === finalSymbols[1] && finalSymbols[1] === finalSymbols[2]) {
-                const winAmount = winAmounts[finalSymbols[0]] || 0;
-                balance += winAmount * 2; // Double for guerrilla bonus!
-                messageDisplay.textContent = `Success! Planted ${finalSymbols[0]} x3 - +${winAmount * 2} seeds!`;
-                isWin = true;
-            } else if (finalSymbols[0] === finalSymbols[1] || finalSymbols[1] === finalSymbols[2] || finalSymbols[0] === finalSymbols[2]) {
-                balance += 10; // Small win for partial match
-                messageDisplay.textContent = 'Partial plant! +10 seeds.';
-                isWin = true; // Treat partial as minor win for sound
+                winAmount = winAmounts[finalSymbols[0]] * 2;
+                message = `Triple ${finalSymbols[0]}! +${winAmount} seeds! 🎉`;
+                highlightIndices = [0, 1, 2];
+                isBigWin = true;
+                playBigWinSound();
+                // Shake reels
+                reels.forEach(reel => {
+                    reel.style.animation = 'win-shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both';
+                    setTimeout(() => {
+                        reel.style.animation = '';
+                    }, 600);
+                });
+            } else if (finalSymbols[0] === finalSymbols[1]) {
+                winAmount = 10;
+                message = `Left Pair ${finalSymbols[0]}! +10 seeds! 👍`;
+                highlightIndices = [0, 1];
+                playSmallWinSound();
+            } else if (finalSymbols[1] === finalSymbols[2]) {
+                winAmount = 10;
+                message = `Right Pair ${finalSymbols[1]}! +10 seeds! 👍`;
+                highlightIndices = [1, 2];
+                playSmallWinSound();
             } else {
-                messageDisplay.textContent = 'No growth this time. Try again!';
+                message = 'No growth this time. Try again!';
             }
-            updateBalance();
-            if (isWin) {
-                playWinSound();
+
+            if (winAmount > 0) {
+                balance += winAmount;
+                updateBalance();
             }
+            messageDisplay.textContent = message;
+
+            if (highlightIndices.length > 0) {
+                highlightReels(highlightIndices);
+            }
+
+            if (isBigWin) {
+                payline.classList.add('big-win');
+            }
+
+            // Clear highlights after celebration
+            setTimeout(clearHighlights, 4000);
         }
 
         function updateBalance() {
             balanceDisplay.textContent = `Seed Credits: ${balance}`;
         }
 
-        // Initialize reels
-        reelStrips.forEach((strip) => createStrip(strip));
+        // Initialize
+        reelStrips.forEach(createStrip);
         spinButton.addEventListener('click', spin);
     </script>
 </body>
