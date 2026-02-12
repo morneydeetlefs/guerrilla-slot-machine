@@ -316,7 +316,7 @@
             spinButton.disabled = true;
 
             const numReels = reelStrips.length;
-            const finalSymbols = Array(numReels).fill().map(getRandomSymbol());
+            const finalSymbols = Array(numReels).fill().map(() => getRandomSymbol());
 
             playSpinSound();
 
