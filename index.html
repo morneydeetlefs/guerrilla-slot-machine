@@ -21,6 +21,7 @@
             border-radius: 10px;
             padding: 20px;
             text-align: center;
+            max-width: 700px;
         }
         #payline-label {
             font-size: 20px;
@@ -37,15 +38,16 @@
             display: flex;
             justify-content: center;
             height: 100%;
+            gap: 8px;
         }
         .reel {
-            width: 100px;
+            width: 90px;
             height: 300px;
             background-color: #fff;
             border: 2px solid #000;
-            margin: 0 10px;
             overflow: hidden;
             position: relative;
+            flex-shrink: 0;
         }
         .reel-strip {
             display: flex;
@@ -55,7 +57,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            transition: transform 1.5s ease-out;
+            transition: transform 2s ease-out;
         }
         .symbol {
             height: 100px;
@@ -63,7 +65,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 60px; /* Larger emojis for better visibility */
+            font-size: 55px;
             box-sizing: border-box;
         }
         .reel-highlight {
@@ -93,7 +95,7 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(to right, transparent 0%, #FFD700 20%, #FFD700 80%, transparent 100%);
+            background: linear-gradient(to right, transparent 0%, #FFD700 15%, #FFD700 85%, transparent 100%);
             transform: translateY(-50%);
             opacity: 0.3;
             transition: all 0.5s ease;
@@ -107,22 +109,23 @@
         }
         @keyframes payline-pulse {
             0%, 100% { transform: translateY(-50%) scaleX(1); }
-            50% { transform: translateY(-50%) scaleX(1.2); }
+            50% { transform: translateY(-50%) scaleX(1.1); }
         }
         @keyframes win-shake {
             0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
-            20%, 40%, 60%, 80% { transform: translateX(2px); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+            20%, 40%, 60%, 80% { transform: translateX(3px); }
         }
         #spin-button {
-            background-color: #FFD700; /* Gold for fortune */
+            background-color: #FFD700;
             color: #006400;
             border: none;
-            padding: 10px 20px;
-            font-size: 18px;
+            padding: 15px 30px;
+            font-size: 20px;
             cursor: pointer;
             border-radius: 5px;
             margin-bottom: 10px;
+            font-weight: bold;
         }
         #spin-button:hover {
             background-color: #FFEC8B;
@@ -132,31 +135,53 @@
             cursor: not-allowed;
         }
         #balance {
-            font-size: 24px;
+            font-size: 28px;
             margin-bottom: 20px;
+            font-weight: bold;
         }
         #message {
             font-size: 18px;
             color: #FFD700;
+            transition: all 0.3s;
+            min-height: 25px;
+        }
+        #message.win {
+            font-size: 24px;
+            color: #FFEB3B;
+            text-shadow: 0 0 10px #FFD700;
+            animation: bounce 0.6s ease-in-out;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-8px); }
+            60% { transform: translateY(-4px); }
         }
     </style>
 </head>
 <body>
     <div class="slot-machine">
         <h1>Guerrilla Gardener's Fortune</h1>
-        <div id="balance">Seed Credits: 100</div>
+        <div id="balance">Seed Credits: 500</div>
         <div id="payline-label">Center Line Wins Only! 🎯</div>
         <div class="reels-container">
             <div class="reels">
-                <div class="reel" id="reel1">
+                <div class="reel">
                     <div class="reel-strip"></div>
                     <div class="reel-highlight"></div>
                 </div>
-                <div class="reel" id="reel2">
+                <div class="reel">
                     <div class="reel-strip"></div>
                     <div class="reel-highlight"></div>
                 </div>
-                <div class="reel" id="reel3">
+                <div class="reel">
+                    <div class="reel-strip"></div>
+                    <div class="reel-highlight"></div>
+                </div>
+                <div class="reel">
+                    <div class="reel-strip"></div>
+                    <div class="reel-highlight"></div>
+                </div>
+                <div class="reel">
                     <div class="reel-strip"></div>
                     <div class="reel-highlight"></div>
                 </div>
@@ -168,19 +193,19 @@
     </div>
 
     <script>
-        const symbols = ['🌱', '🌿', '🌳', '🛠️', '💧']; // Guerrilla gardening symbols
-        const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
-        const reelStrips = reels.map(reel => reel.querySelector('.reel-strip'));
-        const reelHighlights = reels.map(reel => reel.querySelector('.reel-highlight'));
+        const symbols = ['🌱', '🌿', '🌳', '🛠️', '💧'];
+        const reels = document.querySelectorAll('.reel');
+        const reelStrips = Array.from(reels).map(reel => reel.querySelector('.reel-strip'));
+        const reelHighlights = Array.from(reels).map(reel => reel.querySelector('.reel-highlight'));
         const payline = document.querySelector('.payline');
         const spinButton = document.getElementById('spin-button');
         const balanceDisplay = document.getElementById('balance');
         const messageDisplay = document.getElementById('message');
-        let balance = 100;
-        const spinCost = 10;
+        let balance = 500;
+        const spinCost = 20;
         const symbolHeight = 100;
         const visibleSymbols = 3;
-        const extraSymbols = 20;
+        const extraSymbols = 25; // More for longer spins
         const winAmounts = {
             '🌱': 20,
             '🌿': 30,
@@ -189,7 +214,7 @@
             '💧': 25
         };
 
-        // Audio setup
+        // Audio
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function playSound(frequency, duration, type = 'sine') {
@@ -197,7 +222,7 @@
             oscillator.type = type;
             oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
             const gainNode = audioCtx.createGain();
-            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
             oscillator.start();
@@ -206,13 +231,14 @@
         }
 
         function playSpinSound() {
-            playSound(600, 200, 'sawtooth');
-            setTimeout(() => playSound(500, 200, 'sawtooth'), 150);
-            setTimeout(() => playSound(400, 200, 'sawtooth'), 300);
+            playSound(700, 250, 'sawtooth');
+            setTimeout(() => playSound(550, 250, 'sawtooth'), 150);
+            setTimeout(() => playSound(450, 250, 'sawtooth'), 350);
+            setTimeout(() => playSound(350, 300, 'sawtooth'), 550);
         }
 
         function playStopSound() {
-            playSound(100, 100, 'square');
+            playSound(120, 120, 'square');
         }
 
         function playSmallWinSound() {
@@ -221,10 +247,18 @@
         }
 
         function playBigWinSound() {
-            playSound(440, 200);
-            setTimeout(() => playSound(554, 200), 200);
-            setTimeout(() => playSound(659, 200), 400);
-            setTimeout(() => playSound(880, 500), 600);
+            playSound(440, 250);
+            setTimeout(() => playSound(554, 250), 200);
+            setTimeout(() => playSound(659, 250), 450);
+            setTimeout(() => playSound(784, 400), 700);
+        }
+
+        function playMegaSound() {
+            playBigWinSound();
+            setTimeout(() => {
+                playSound(880, 300);
+                setTimeout(() => playSound(1046, 600), 250);
+            }, 1400);
         }
 
         function getRandomSymbol() {
@@ -249,7 +283,7 @@
                 symbol.textContent = getRandomSymbol();
                 reelStrip.appendChild(symbol);
             }
-            const spinAmount = extraSymbols - Math.floor(Math.random() * 3);
+            const spinAmount = extraSymbols - Math.floor(Math.random() * visibleSymbols);
             const middlePosition = spinAmount + 1;
             reelStrip.children[middlePosition].textContent = finalSymbol;
             return spinAmount * symbolHeight;
@@ -261,14 +295,16 @@
         }
 
         function highlightReels(indices) {
+            const indexSet = new Set(indices);
             reelHighlights.forEach((highlight, i) => {
-                highlight.classList.toggle('active', indices.includes(i));
+                highlight.classList.toggle('active', indexSet.has(i));
             });
         }
 
         function spin() {
             if (balance < spinCost) {
                 messageDisplay.textContent = 'Out of seeds! Refresh to replant.';
+                messageDisplay.classList.remove('win');
                 spinButton.disabled = true;
                 return;
             }
@@ -276,14 +312,16 @@
             balance -= spinCost;
             updateBalance();
             messageDisplay.textContent = '';
+            messageDisplay.classList.remove('win');
             spinButton.disabled = true;
 
-            const finalSymbols = reels.map(() => getRandomSymbol());
+            const numReels = reelStrips.length;
+            const finalSymbols = Array(numReels).fill().map(getRandomSymbol());
 
             playSpinSound();
 
-            const durations = [1.5, 2.0, 2.5];
-            const maxDuration = durations[2] * 1000 + 500;
+            const durations = [1.0, 1.4, 1.8, 2.2, 2.6];
+            const maxDuration = Math.max(...durations) * 1000 + 800;
 
             reelStrips.forEach((reelStrip, index) => {
                 const spinDistance = prepareStrip(reelStrip, finalSymbols[index]);
@@ -293,7 +331,7 @@
                 reelStrip.style.transition = `transform ${durations[index]}s ease-out`;
                 reelStrip.style.transform = `translateY(-${spinDistance}px)`;
 
-                setTimeout(() => playStopSound(), durations[index] * 1000 - 100);
+                setTimeout(() => playStopSound(), durations[index] * 1000 - 80);
             });
 
             setTimeout(() => {
@@ -303,54 +341,77 @@
         }
 
         function checkWin(finalSymbols) {
-            let winAmount = 0;
-            let message = '';
-            let isBigWin = false;
-            let highlightIndices = [];
+            let totalWin = 0;
+            let winMessages = [];
+            let highlightGroups = [];
+            let maxLen = 0;
 
-            if (finalSymbols[0] === finalSymbols[1] && finalSymbols[1] === finalSymbols[2]) {
-                winAmount = winAmounts[finalSymbols[0]] * 2;
-                message = `Triple ${finalSymbols[0]}! +${winAmount} seeds! 🎉`;
-                highlightIndices = [0, 1, 2];
-                isBigWin = true;
-                playBigWinSound();
-                // Shake reels
-                reels.forEach(reel => {
-                    reel.style.animation = 'win-shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both';
-                    setTimeout(() => {
-                        reel.style.animation = '';
-                    }, 600);
+            // Find maximal streaks
+            let i = 0;
+            while (i < finalSymbols.length) {
+                let j = i + 1;
+                while (j < finalSymbols.length && finalSymbols[j] === finalSymbols[i]) j++;
+                const len = j - i;
+                if (len >= 2) {
+                    const sym = finalSymbols[i];
+                    let payout;
+                    switch (len) {
+                        case 5: payout = winAmounts[sym] * 10; break;
+                        case 4: payout = winAmounts[sym] * 5; break;
+                        case 3: payout = winAmounts[sym] * 2; break;
+                        case 2: payout = 10; break;
+                        default: payout = 0;
+                    }
+                    totalWin += payout;
+                    highlightGroups.push(Array.from({length: len}, (_, k) => i + k));
+                    winMessages.push(`${len}x ${sym}`);
+                    maxLen = Math.max(maxLen, len);
+                }
+                i = j;
+            }
+
+            let message = '';
+            if (totalWin > 0) {
+                balance += totalWin;
+                updateBalance();
+                message = winMessages.join(' + ') + ` = +${totalWin} seeds! 🎉`;
+                messageDisplay.classList.add('win');
+
+                // Highlights
+                const highlightIndices = [];
+                highlightGroups.forEach(group => group.forEach(idx => highlightIndices.push(idx)));
+                highlightReels(highlightIndices);
+
+                // Payline glow on big streaks
+                if (maxLen >= 3) {
+                    payline.classList.add('big-win');
+                }
+
+                // Shake winning reels
+                const shakeDuration = maxLen >= 4 ? 1000 : 600;
+                const shakeReels = highlightIndices.map(idx => reels[idx]);
+                shakeReels.forEach(reel => {
+                    reel.style.animation = `win-shake ${shakeDuration / 1000}s ease-in-out`;
                 });
-            } else if (finalSymbols[0] === finalSymbols[1]) {
-                winAmount = 10;
-                message = `Left Pair ${finalSymbols[0]}! +10 seeds! 👍`;
-                highlightIndices = [0, 1];
-                playSmallWinSound();
-            } else if (finalSymbols[1] === finalSymbols[2]) {
-                winAmount = 10;
-                message = `Right Pair ${finalSymbols[1]}! +10 seeds! 👍`;
-                highlightIndices = [1, 2];
-                playSmallWinSound();
+                setTimeout(() => {
+                    shakeReels.forEach(reel => reel.style.animation = '');
+                }, shakeDuration);
+
+                // Sounds
+                if (maxLen === 5) {
+                    playMegaSound();
+                } else if (maxLen >= 3) {
+                    playBigWinSound();
+                } else {
+                    playSmallWinSound();
+                }
             } else {
                 message = 'No growth this time. Try again!';
             }
-
-            if (winAmount > 0) {
-                balance += winAmount;
-                updateBalance();
-            }
             messageDisplay.textContent = message;
 
-            if (highlightIndices.length > 0) {
-                highlightReels(highlightIndices);
-            }
-
-            if (isBigWin) {
-                payline.classList.add('big-win');
-            }
-
             // Clear highlights after celebration
-            setTimeout(clearHighlights, 4000);
+            setTimeout(clearHighlights, 5000);
         }
 
         function updateBalance() {
