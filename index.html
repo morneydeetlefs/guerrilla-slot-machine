@@ -5,148 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guerrilla Gardener's Fortune Slot Machine</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #228B22;
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .slot-machine {
-            background-color: #006400;
-            border: 5px solid #8B4513;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            max-width: 800px;
-        }
-        #bet-info {
-            font-size: 20px;
-            color: #FFD700;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        #payline-selector {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        .line-btn {
-            background: #006400;
-            color: #fff;
-            border: 2px solid #FFD700;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-        .line-btn.active {
-            background: #FFD700;
-            color: #006400;
-            box-shadow: 0 0 12px #FFD700;
-        }
-        .line-btn:hover:not(.active) {
-            background: #228B22;
-        }
-        .reels-container {
-            position: relative;
-            height: 300px;
-            margin-bottom: 20px;
-        }
-        .reels {
-            display: flex;
-            justify-content: center;
-            height: 100%;
-            gap: 8px;
-        }
-        .reel {
-            width: 90px;
-            height: 300px;
-            background-color: #fff;
-            border: 2px solid #000;
-            overflow: hidden;
-            position: relative;
-            flex-shrink: 0;
-        }
-        .reel-strip {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            transition: transform 2s ease-out;
-        }
-        .symbol {
-            height: 100px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 55px;
-            box-sizing: border-box;
-        }
-        .payline {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(to right, transparent 0%, #FFD700 15%, #FFD700 85%, transparent 100%);
-            opacity: 0.25;
-            transition: all 0.4s;
-            z-index: 3;
-            pointer-events: none;
-        }
-        .payline.active {
-            opacity: 0.7;
-            box-shadow: 0 0 10px #FFD700;
-        }
-        .payline.won {
-            opacity: 1;
-            box-shadow: 0 0 25px #FFEB3B;
-            animation: payline-pulse 1.2s infinite;
-        }
-        @keyframes payline-pulse {
-            0%, 100% { transform: scaleX(1); }
-            50% { transform: scaleX(1.08); }
-        }
-        .reel-highlight {
-            position: absolute;
-            inset: 0 0 0 0;
-            pointer-events: none;
-            z-index: 2;
-            transition: background 0.4s;
-        }
-        .reel-highlight.won {
-            background: rgba(255, 215, 0, 0.35);
-            animation: highlight-glow 1.2s infinite alternate;
-        }
-        @keyframes highlight-glow {
-            from { background: rgba(255, 215, 0, 0.25); }
-            to   { background: rgba(255, 215, 0, 0.45); }
-        }
-        @keyframes win-shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-            20%, 40%, 60%, 80% { transform: translateX(4px); }
-        }
-        #spin-button {
-            background-color: #FFD700;
-            color: #006400;
-            border: none;
-            padding: 15px 30px;
-            font-size: 20px;
-            cursor: pointer;
-            border-radius: 8px;
-            margin: 15px 0 10px;
-            font-weight: bold;
-        }
+        body { font-family: Arial, sans-serif; background-color: #228B22; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .slot-machine { background-color: #006400; border: 5px solid #8B4513; border-radius: 10px; padding: 20px; text-align: center; max-width: 800px; }
+        #bet-info { font-size: 20px; color: #FFD700; margin-bottom: 10px; font-weight: bold; }
+        #payline-selector { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; }
+        .line-btn { background: #006400; color: #fff; border: 2px solid #FFD700; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+        .line-btn.active { background: #FFD700; color: #006400; box-shadow: 0 0 12px #FFD700; }
+        .line-btn:hover:not(.active) { background: #228B22; }
+        .reels-container { position: relative; height: 300px; margin-bottom: 20px; }
+        .reels { display: flex; justify-content: center; height: 100%; gap: 8px; }
+        .reel { width: 90px; height: 300px; background-color: #fff; border: 2px solid #000; overflow: hidden; position: relative; flex-shrink: 0; }
+        .reel-strip { display: flex; flex-direction: column; align-items: center; position: absolute; top: 0; left: 0; width: 100%; transition: transform 2s ease-out; }
+        .symbol { height: 100px; width: 100%; display: flex; justify-content: center; align-items: center; font-size: 55px; box-sizing: border-box; }
+        .payline { position: absolute; left: 0; right: 0; height: 4px; background: linear-gradient(to right, transparent 0%, #FFD700 15%, #FFD700 85%, transparent 100%); opacity: 0.25; transition: all 0.4s; z-index: 3; pointer-events: none; }
+        .payline.active { opacity: 0.7; box-shadow: 0 0 10px #FFD700; }
+        .payline.won { opacity: 1; box-shadow: 0 0 25px #FFEB3B; animation: payline-pulse 1.2s infinite; }
+        @keyframes payline-pulse { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.08); } }
+        .reel-highlight { position: absolute; inset: 0; pointer-events: none; z-index: 2; transition: background 0.4s; }
+        .reel-highlight.won { background: rgba(255, 215, 0, 0.35); animation: highlight-glow 1.2s infinite alternate; }
+        @keyframes highlight-glow { from { background: rgba(255, 215, 0, 0.25); } to { background: rgba(255, 215, 0, 0.45); } }
+        @keyframes win-shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); } 20%, 40%, 60%, 80% { transform: translateX(4px); } }
+        #spin-button { background-color: #FFD700; color: #006400; border: none; padding: 15px 30px; font-size: 20px; cursor: pointer; border-radius: 8px; margin: 15px 0 10px; font-weight: bold; }
         #spin-button:hover { background-color: #FFEC8B; }
         #spin-button:disabled { background: #555; cursor: not-allowed; }
         #balance { font-size: 28px; margin-bottom: 10px; font-weight: bold; }
@@ -205,10 +84,9 @@
         const baseBet = 20;
         const symbolHeight = 100;
         const visibleSymbols = 3;
-        const extraSymbols = 25;
+        const extraSymbols = 30; // increased slightly for nicer spin feel
         const winAmounts = { '🌱': 20, '🌿': 30, '🌳': 50, '🛠️': 40, '💧': 25 };
 
-        // Audio functions (shortened for brevity - keep your originals if preferred)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(f, d, t = 'sine') {
             const o = audioCtx.createOscillator(); o.type = t; o.frequency.value = f;
@@ -217,11 +95,11 @@
             o.start(); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d/1000);
             o.stop(audioCtx.currentTime + d/1000);
         }
-        function playSpinSound() { playSound(700,250,'sawtooth'); setTimeout(()=>playSound(550,250,'sawtooth'),150); }
+        function playSpinSound() { playSound(700,250,'sawtooth'); setTimeout(()=>playSound(550,250,'sawtooth'),150); setTimeout(()=>playSound(400,300,'sawtooth'),350); }
         function playStopSound() { playSound(120,120,'square'); }
         function playSmallWinSound() { playSound(523,300); setTimeout(()=>playSound(659,300),200); }
-        function playBigWinSound() { playSound(440,250); setTimeout(()=>playSound(659,350),250); }
-        function playMegaSound() { playBigWinSound(); setTimeout(()=>playSound(880,400),800); }
+        function playBigWinSound() { playSound(440,250); setTimeout(()=>playSound(554,250),200); setTimeout(()=>playSound(659,250),450); setTimeout(()=>playSound(784,400),700); }
+        function playMegaSound() { playBigWinSound(); setTimeout(()=>{playSound(880,300); setTimeout(()=>playSound(1046,600),250);},1400); }
 
         function getRandomSymbol() { return symbols[Math.floor(Math.random() * symbols.length)]; }
 
@@ -235,8 +113,7 @@
             }
         }
 
-        // Returns spin distance and sets final middle symbol
-        function prepareStrip(strip, finalMiddleSymbol) {
+        function prepareStrip(strip, topSym, midSym, botSym) {
             strip.innerHTML = '';
             for (let i = 0; i < visibleSymbols + extraSymbols; i++) {
                 const s = document.createElement('div');
@@ -244,9 +121,13 @@
                 s.textContent = getRandomSymbol();
                 strip.appendChild(s);
             }
-            const spinAmount = extraSymbols - Math.floor(Math.random() * visibleSymbols);
-            const midPos = spinAmount + 1;
-            strip.children[midPos].textContent = finalMiddleSymbol;
+            const spinAmount = extraSymbols - Math.floor(Math.random() * 4); // slight variation in stop position
+            const topPos    = spinAmount;
+            const midPos    = spinAmount + 1;
+            const botPos    = spinAmount + 2;
+            strip.children[topPos].textContent = topSym;
+            strip.children[midPos].textContent = midSym;
+            strip.children[botPos].textContent = botSym;
             return spinAmount * symbolHeight;
         }
 
@@ -285,33 +166,26 @@
             messageDisplay.classList.remove('win');
             spinButton.disabled = true;
 
-            // Decide final middle symbols for each reel
-            const finalMiddles = Array(5).fill().map(getRandomSymbol);
-
-            // Also build the 3-row visible grid right now (top/middle/bottom will be set after spin)
+            // Decide ALL visible symbols upfront
             const finalGrid = [
-                Array(5).fill(''), // row 0 = top
-                finalMiddles,      // row 1 = middle
-                Array(5).fill('')  // row 2 = bottom
+                Array(5).fill().map(getRandomSymbol), // top row
+                Array(5).fill().map(getRandomSymbol), // middle row
+                Array(5).fill().map(getRandomSymbol)  // bottom row
             ];
 
             const durations = [1.0, 1.4, 1.8, 2.2, 2.6];
 
-            reelStrips.forEach((strip, i) => {
-                const distance = prepareStrip(strip, finalMiddles[i]);
+            reelStrips.forEach((strip, col) => {
+                const topSym = finalGrid[0][col];
+                const midSym = finalGrid[1][col];
+                const botSym = finalGrid[2][col];
+                const distance = prepareStrip(strip, topSym, midSym, botSym);
                 strip.style.transition = 'none';
                 strip.style.transform = 'translateY(0)';
-                strip.offsetHeight; // reflow
-                strip.style.transition = `transform ${durations[i]}s ease-out`;
+                strip.offsetHeight;
+                strip.style.transition = `transform ${durations[col]}s ease-out`;
                 strip.style.transform = `translateY(-${distance}px)`;
-
-                // After this reel's spin ends, set top & bottom symbols (visual only)
-                setTimeout(() => {
-                    const children = strip.children;
-                    if (children[spinAmount])     finalGrid[0][i] = children[spinAmount].textContent;
-                    if (children[spinAmount + 2]) finalGrid[2][i] = children[spinAmount + 2].textContent;
-                    playStopSound();
-                }, durations[i] * 1000);
+                setTimeout(playStopSound, durations[col] * 1000 - 80);
             });
 
             setTimeout(() => {
@@ -324,12 +198,12 @@
             let totalWin = 0;
             let winningPaylines = [];
 
-            const lines = [];
-            if (activePaylines >= 1) lines.push({name: 'center', row: 1, el: paylines.center});
-            if (activePaylines >= 2) lines.push({name: 'top',    row: 0, el: paylines.top});
-            if (activePaylines >= 3) lines.push({name: 'bottom', row: 2, el: paylines.bottom});
+            const linesToCheck = [];
+            if (activePaylines >= 1) linesToCheck.push({name: 'center', row: 1, el: paylines.center});
+            if (activePaylines >= 2) linesToCheck.push({name: 'top',    row: 0, el: paylines.top});
+            if (activePaylines >= 3) linesToCheck.push({name: 'bottom', row: 2, el: paylines.bottom});
 
-            lines.forEach(line => {
+            linesToCheck.forEach(line => {
                 const rowSym = grid[line.row];
                 let i = 0;
                 while (i < rowSym.length) {
@@ -343,8 +217,6 @@
                                      len === 4 ? winAmounts[sym] * 5 :
                                      len === 5 ? winAmounts[sym] * 10 : 0;
                         totalWin += payout;
-
-                        // Highlight winning reels
                         for (let k = i; k < j; k++) {
                             reelHighlights[k].classList.add('won');
                         }
@@ -370,7 +242,7 @@
                         if (h.classList.contains('won')) reels[i].style.animation = 'win-shake 0.8s';
                     });
                     setTimeout(() => reels.forEach(r => r.style.animation = ''), 800);
-                }, 300);
+                }, 400);
             } else {
                 messageDisplay.textContent = 'No growth this time... Try again!';
             }
