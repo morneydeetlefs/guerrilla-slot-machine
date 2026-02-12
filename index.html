@@ -34,212 +34,57 @@
             max-width: 420px;
             box-sizing: border-box;
         }
-        h1 {
-            font-size: 1.6rem;
-            margin: 8px 0 12px;
-            color: #FFEB3B;
-            text-shadow: 0 2px 4px #000;
-        }
-        #balance {
-            font-size: 1.4rem;
-            margin: 8px 0;
-            font-weight: bold;
-        }
-        #bet-info {
-            font-size: 1rem;
-            color: #FFD700;
-            margin: 6px 0 12px;
-        }
-        #payline-selector {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-        }
+        h1 { font-size: 1.6rem; margin: 8px 0 12px; color: #FFEB3B; text-shadow: 0 2px 4px #000; }
+        #balance { font-size: 1.4rem; margin: 8px 0; font-weight: bold; }
+        #bet-info { font-size: 1rem; color: #FFD700; margin: 6px 0 12px; }
+        #payline-selector { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
         .line-btn {
-            background: #004d00;
-            color: white;
-            border: 2px solid #FFD700;
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            cursor: pointer;
-            min-width: 70px;
+            background: #004d00; color: white; border: 2px solid #FFD700; padding: 8px 14px;
+            border-radius: 6px; font-size: 0.9rem; font-weight: bold; cursor: pointer; min-width: 70px;
             touch-action: manipulation;
         }
-        .line-btn.active {
-            background: #FFD700;
-            color: #004d00;
-            box-shadow: 0 0 10px #FFD700;
-        }
-        .reels-container {
-            position: relative;
-            height: calc(var(--reel-size) * 3);
-            margin: 12px 0;
-            width: 100%;
-            max-width: 420px;
-        }
-        .reels {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            height: 100%;
-        }
-        .reel {
-            width: var(--reel-size);
-            height: 100%;
-            background: white;
-            border: 2px solid #222;
-            border-radius: 6px;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-        .reel-strip {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            transition: transform 2s ease-out;
-        }
-        .symbol {
-            height: var(--symbol-size);
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: calc(var(--reel-size) * 0.65);
-        }
-        .payline {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(to right, transparent, #FFD700 20%, #FFD700 80%, transparent);
-            opacity: 0.3;
-            z-index: 3;
-            pointer-events: none;
-        }
+        .line-btn.active { background: #FFD700; color: #004d00; box-shadow: 0 0 10px #FFD700; }
+        .reels-container { position: relative; height: calc(var(--reel-size) * 3); margin: 12px 0; width: 100%; max-width: 420px; }
+        .reels { display: flex; justify-content: center; gap: 6px; height: 100%; }
+        .reel { width: var(--reel-size); height: 100%; background: white; border: 2px solid #222; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+        .reel-strip { position: absolute; top: 0; left: 0; width: 100%; transition: transform 2s ease-out; }
+        .symbol { height: var(--symbol-size); width: 100%; display: flex; align-items: center; justify-content: center; font-size: calc(var(--reel-size) * 0.65); }
+        .payline { position: absolute; left: 0; right: 0; height: 3px; background: linear-gradient(to right, transparent, #FFD700 20%, #FFD700 80%, transparent); opacity: 0.3; z-index: 3; pointer-events: none; }
         .payline.active { opacity: 0.75; box-shadow: 0 0 8px #FFD700; }
         .payline.won { opacity: 1; animation: pulse 1.2s infinite; box-shadow: 0 0 15px #FFEB3B; }
         @keyframes pulse { 0%,100% { transform: scaleX(1); } 50% { transform: scaleX(1.06); } }
         #spin-button {
-            background: #FFD700;
-            color: #004d00;
-            border: none;
-            padding: 14px 32px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border-radius: 8px;
-            margin: 12px auto;
-            display: block;
-            width: 80%;
-            max-width: 280px;
-            cursor: pointer;
-            touch-action: manipulation;
+            background: #FFD700; color: #004d00; border: none; padding: 14px 32px; font-size: 1.2rem;
+            font-weight: bold; border-radius: 8px; margin: 12px auto; display: block; width: 80%; max-width: 280px;
+            cursor: pointer; touch-action: manipulation;
         }
-        #spin-button:disabled {
-            background: #555;
-            color: #aaa;
-        }
-        #message {
-            font-size: 1.1rem;
-            min-height: 2.2em;
-            margin: 8px 0;
-            color: #FFEB3B;
-        }
-        #inventory {
-            background: rgba(0,0,0,0.4);
-            border: 2px solid #8B4513;
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 16px;
-        }
-        #inventory h3 {
-            margin: 0 0 10px;
-            font-size: 1.2rem;
-            color: #FFD700;
-            text-align: center;
-        }
-        .item-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 10px;
-        }
+        #spin-button:disabled { background: #555; color: #aaa; }
+        #message { font-size: 1.1rem; min-height: 2.2em; margin: 8px 0; color: #FFEB3B; }
+        #inventory { background: rgba(0,0,0,0.4); border: 2px solid #8B4513; border-radius: 8px; padding: 12px; margin-top: 16px; }
+        #inventory h3 { margin: 0 0 10px; font-size: 1.2rem; color: #FFD700; text-align: center; }
+        .item-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; }
         .item {
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-            padding: 8px;
-            text-align: center;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.15s;
-            font-size: 2.2rem;
-            position: relative;
+            background: rgba(255,255,255,0.1); border-radius: 8px; padding: 8px; text-align: center; cursor: pointer;
+            border: 2px solid transparent; transition: all 0.15s; font-size: 2.2rem; position: relative;
         }
-        .item:hover, .item:active {
-            transform: scale(1.08);
-            border-color: #FFD700;
-            box-shadow: 0 0 12px #FFD70080;
-        }
+        .item:hover, .item:active { transform: scale(1.08); border-color: #FFD700; box-shadow: 0 0 12px #FFD70080; }
         .item-count {
-            position: absolute;
-            bottom: -6px;
-            right: -6px;
-            background: #FFD700;
-            color: #004d00;
-            font-size: 0.7rem;
-            font-weight: bold;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #004d00;
+            position: absolute; bottom: -6px; right: -6px; background: #FFD700; color: #004d00;
+            font-size: 0.7rem; font-weight: bold; width: 20px; height: 20px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; border: 2px solid #004d00;
         }
         .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            padding: 12px;
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000;
+            align-items: center; justify-content: center; padding: 12px;
         }
         .modal-content {
-            background: #1b5e20;
-            border: 4px solid #8B4513;
-            border-radius: 12px;
-            padding: 20px;
-            width: 100%;
-            max-width: 360px;
-            text-align: center;
-            position: relative;
+            background: #1b5e20; border: 4px solid #8B4513; border-radius: 12px; padding: 20px;
+            width: 100%; max-width: 360px; text-align: center; position: relative;
         }
-        .modal-close {
-            position: absolute;
-            top: 8px;
-            right: 12px;
-            font-size: 32px;
-            color: #FFD700;
-            cursor: pointer;
-        }
+        .modal-close { position: absolute; top: 8px; right: 12px; font-size: 32px; color: #FFD700; cursor: pointer; }
         .modal-emoji { font-size: 80px; margin: 10px 0; }
         .modal-title { font-size: 1.5rem; margin: 8px 0; color: #FFEB3B; }
-        .modal-rarity {
-            font-size: 1.1rem;
-            font-weight: bold;
-            padding: 6px 14px;
-            border-radius: 20px;
-            display: inline-block;
-            margin: 8px 0 12px;
-        }
+        .modal-rarity { font-size: 1.1rem; font-weight: bold; padding: 6px 14px; border-radius: 20px; display: inline-block; margin: 8px 0 12px; }
         .modal-desc { font-size: 0.95rem; line-height: 1.4; opacity: 0.9; margin: 12px 0; }
         .modal-count { font-size: 1.2rem; color: #81d4fa; margin: 8px 0; }
         .modal-multiplier { font-size: 1.1rem; color: #66bb6a; font-weight: bold; }
@@ -280,7 +125,6 @@
     </div>
 </div>
 
-<!-- Modal -->
 <div class="modal" id="item-modal">
     <div class="modal-content">
         <span class="modal-close" id="modal-close">×</span>
@@ -307,16 +151,14 @@ const symbolData = {
     '🌳': { name: 'Young Tree',      desc: 'A baby tree ready to grow tall and provide shade for future generations.', rarity: 'Legendary', color: '#ffb300', mult: 5.0 }
 };
 
-const winAmounts = {
-    '🌱': 20, '🌿': 30, '🌳': 50, '🛠️': 40, '💧': 25
-};
+const winAmounts = { '🌱': 20, '🌿': 30, '🌳': 50, '🛠️': 40, '💧': 25 };
 
 const baseBet = 20;
 const symbolHeight = 100;
 const visibleSymbols = 3;
 const extraSymbols = 30;
 
-// DOM elements
+// DOM
 const reels = document.querySelectorAll('.reel');
 const reelStrips = Array.from(reels).map(r => r.querySelector('.reel-strip'));
 const reelHighlights = Array.from(reels).map(r => r.querySelector('.reel-highlight'));
@@ -347,9 +189,7 @@ function playSmallWinSound(){playSound(523,300);setTimeout(()=>playSound(659,300
 function playBigWinSound(){playSound(440,250);setTimeout(()=>playSound(554,250),200);setTimeout(()=>playSound(659,250),450);setTimeout(()=>playSound(784,400),700);}
 function playMegaSound(){playBigWinSound();setTimeout(()=>{playSound(880,300);setTimeout(()=>playSound(1046,600),250);},1400);}
 
-// ────────────────────────────────────────────────
 // Helpers
-// ────────────────────────────────────────────────
 function getRandomSymbol(){return symbols[Math.floor(Math.random()*symbols.length)];}
 
 function createStrip(strip){
@@ -368,7 +208,7 @@ function prepareStrip(strip,topSym,midSym,botSym){
     strip.children[spinAmount].textContent=topSym;
     strip.children[spinAmount+1].textContent=midSym;
     strip.children[spinAmount+2].textContent=botSym;
-    return spinAmount*100; // symbolHeight = 100
+    return spinAmount*100;
 }
 
 function updateBetDisplay(){
@@ -434,9 +274,7 @@ function renderInventory(){
     });
 }
 
-// ────────────────────────────────────────────────
 // Core Game
-// ────────────────────────────────────────────────
 function spin(){
     const bet=baseBet*activePaylines;
     if(balance<bet){
@@ -529,9 +367,7 @@ function checkWins(grid){
     setTimeout(clearAllHighlights,5000);
 }
 
-// ────────────────────────────────────────────────
 // Init & Events
-// ────────────────────────────────────────────────
 reelStrips.forEach(createStrip);
 setActivePaylines(1);
 renderInventory();
