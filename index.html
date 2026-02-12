@@ -82,245 +82,302 @@
     </div>
 
     <script>
-        const symbols = ['🌱', '🌿', '🌳', '🛠️', '💧'];
-        const symbolNames = {
-            '🌱': 'Seed Packet',
-            '🌿': 'Herb Cutting',
-            '🌳': 'Young Tree',
-            '🛠️': 'Gardening Tool',
-            '💧': 'Watering Can'
-        };
+    // ────────────────────────────────────────────────
+    // Constants & Configuration
+    // ────────────────────────────────────────────────
+    const symbols = ['🌱', '🌿', '🌳', '🛠️', '💧'];
+    const symbolNames = {
+        '🌱': 'Seed Packet',
+        '🌿': 'Herb Cutting',
+        '🌳': 'Young Tree',
+        '🛠️': 'Gardening Tool',
+        '💧': 'Watering Can'
+    };
 
-        const reels = document.querySelectorAll('.reel');
-        const reelStrips = Array.from(reels).map(r => r.querySelector('.reel-strip'));
-        const reelHighlights = Array.from(reels).map(r => r.querySelector('.reel-highlight'));
-        const paylines = {
-            top: document.getElementById('payline-top'),
-            center: document.getElementById('payline-center'),
-            bottom: document.getElementById('payline-bottom')
-        };
-        const spinButton = document.getElementById('spin-button');
-        const balanceDisplay = document.getElementById('balance');
-        const betInfo = document.getElementById('bet-info');
-        const messageDisplay = document.getElementById('message');
-        const lineButtons = document.querySelectorAll('.line-btn');
-        const wonItemsList = document.getElementById('won-items-list');
+    const winAmounts = {
+        '🌱': 20,
+        '🌿': 30,
+        '🌳': 50,
+        '🛠️': 40,
+        '💧': 25
+    };
 
-        let balance = 500;
-        let activePaylines = 1;
-        const baseBet = 20;
-        const symbolHeight = 100;
-        const visibleSymbols = 3;
-        const extraSymbols = 30;
+    const baseBet = 20;
+    const symbolHeight = 100;
+    const visibleSymbols = 3;
+    const extraSymbols = 30;
 
-        // Inventory: { symbol: count }
-        const inventory = {};
+    // DOM elements
+    const reels = document.querySelectorAll('.reel');
+    const reelStrips = Array.from(reels).map(r => r.querySelector('.reel-strip'));
+    const reelHighlights = Array.from(reels).map(r => r.querySelector('.reel-highlight'));
+    const paylines = {
+        top: document.getElementById('payline-top'),
+        center: document.getElementById('payline-center'),
+        bottom: document.getElementById('payline-bottom')
+    };
+    const spinButton = document.getElementById('spin-button');
+    const balanceDisplay = document.getElementById('balance');
+    const betInfo = document.getElementById('bet-info');
+    const messageDisplay = document.getElementById('message');
+    const lineButtons = document.querySelectorAll('.line-btn');
+    const wonItemsList = document.getElementById('won-items-list');
 
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(f, d, t = 'sine') {
-            const o = audioCtx.createOscillator(); o.type = t; o.frequency.value = f;
-            const g = audioCtx.createGain(); g.gain.value = 0.4;
-            o.connect(g); g.connect(audioCtx.destination);
-            o.start(); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d/1000);
-            o.stop(audioCtx.currentTime + d/1000);
+    // State
+    let balance = 500;
+    let activePaylines = 1;
+    const inventory = {}; // { '🌱': 3, '🌳': 1, ... }
+
+    // ────────────────────────────────────────────────
+    // Audio
+    // ────────────────────────────────────────────────
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(frequency, duration, type = 'sine') {
+        const osc = audioCtx.createOscillator();
+        osc.type = type;
+        osc.frequency.value = frequency;
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0.4;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration / 1000);
+        osc.stop(audioCtx.currentTime + duration / 1000);
+    }
+
+    function playSpinSound() {
+        playSound(700, 250, 'sawtooth');
+        setTimeout(() => playSound(550, 250, 'sawtooth'), 150);
+        setTimeout(() => playSound(400, 300, 'sawtooth'), 350);
+    }
+
+    function playStopSound() {
+        playSound(120, 120, 'square');
+    }
+
+    function playSmallWinSound() {
+        playSound(523, 300);
+        setTimeout(() => playSound(659, 300), 200);
+    }
+
+    function playBigWinSound() {
+        playSound(440, 250);
+        setTimeout(() => playSound(554, 250), 200);
+        setTimeout(() => playSound(659, 250), 450);
+        setTimeout(() => playSound(784, 400), 700);
+    }
+
+    function playMegaSound() {
+        playBigWinSound();
+        setTimeout(() => {
+            playSound(880, 300);
+            setTimeout(() => playSound(1046, 600), 250);
+        }, 1400);
+    }
+
+    // ────────────────────────────────────────────────
+    // Utility Functions
+    // ────────────────────────────────────────────────
+    function getRandomSymbol() {
+        return symbols[Math.floor(Math.random() * symbols.length)];
+    }
+
+    function createStrip(strip) {
+        strip.innerHTML = '';
+        for (let i = 0; i < visibleSymbols + extraSymbols; i++) {
+            const s = document.createElement('div');
+            s.classList.add('symbol');
+            s.textContent = getRandomSymbol();
+            strip.appendChild(s);
         }
-        function playSpinSound() { playSound(700,250,'sawtooth'); setTimeout(()=>playSound(550,250,'sawtooth'),150); setTimeout(()=>playSound(400,300,'sawtooth'),350); }
-        function playStopSound() { playSound(120,120,'square'); }
-        function playSmallWinSound() { playSound(523,300); setTimeout(()=>playSound(659,300),200); }
-        function playBigWinSound() { playSound(440,250); setTimeout(()=>playSound(554,250),200); setTimeout(()=>playSound(659,250),450); setTimeout(()=>playSound(784,400),700); }
-        function playMegaSound() { playBigWinSound(); setTimeout(()=>{playSound(880,300); setTimeout(()=>playSound(1046,600),250);},1400); }
+    }
 
-        function getRandomSymbol() { return symbols[Math.floor(Math.random() * symbols.length)]; }
+    function prepareStrip(strip, topSym, midSym, botSym) {
+        strip.innerHTML = '';
+        for (let i = 0; i < visibleSymbols + extraSymbols; i++) {
+            const s = document.createElement('div');
+            s.classList.add('symbol');
+            s.textContent = getRandomSymbol();
+            strip.appendChild(s);
+        }
+        const spinAmount = extraSymbols - Math.floor(Math.random() * 4);
+        strip.children[spinAmount].textContent     = topSym;
+        strip.children[spinAmount + 1].textContent = midSym;
+        strip.children[spinAmount + 2].textContent = botSym;
+        return spinAmount * symbolHeight;
+    }
 
-        function createStrip(strip) {
-            strip.innerHTML = '';
-            for (let i = 0; i < visibleSymbols + extraSymbols; i++) {
-                const s = document.createElement('div');
-                s.classList.add('symbol');
-                s.textContent = getRandomSymbol();
-                strip.appendChild(s);
+    function updateBetDisplay() {
+        const bet = baseBet * activePaylines;
+        betInfo.textContent = `Bet: ${bet} credits | Paylines: ${activePaylines}`;
+    }
+
+    function setActivePaylines(num) {
+        activePaylines = num;
+        lineButtons.forEach(b => b.classList.toggle('active', parseInt(b.dataset.lines) === num));
+        paylines.top.classList.toggle('active', num >= 2);
+        paylines.center.classList.toggle('active', num >= 1);
+        paylines.bottom.classList.toggle('active', num >= 3);
+        updateBetDisplay();
+    }
+
+    function clearAllHighlights() {
+        reelHighlights.forEach(h => h.classList.remove('won'));
+        Object.values(paylines).forEach(p => p.classList.remove('won'));
+    }
+
+    function addToInventory(symbol) {
+        inventory[symbol] = (inventory[symbol] || 0) + 1;
+        renderInventory();
+    }
+
+    function renderInventory() {
+        wonItemsList.innerHTML = '';
+        const entries = Object.entries(inventory);
+        if (entries.length === 0) {
+            wonItemsList.innerHTML = '<li style="grid-column: 1 / -1; opacity:0.6; text-align:center;">No items collected yet</li>';
+            return;
+        }
+
+        entries.forEach(([sym, count]) => {
+            const li = document.createElement('li');
+            li.className = 'item';
+            li.innerHTML = `
+                ${sym}
+                <span class="item-count">${count}</span>
+                <div style="font-size:12px; margin-top:4px;">${symbolNames[sym]}</div>
+            `;
+            wonItemsList.appendChild(li);
+        });
+    }
+
+    // ────────────────────────────────────────────────
+    // Game Logic
+    // ────────────────────────────────────────────────
+    function spin() {
+        const bet = baseBet * activePaylines;
+        if (balance < bet) {
+            messageDisplay.textContent = 'Not enough planting credits! Refresh to restart.';
+            return;
+        }
+
+        clearAllHighlights();
+        balance -= bet;
+        balanceDisplay.textContent = `Planting Credits: ${balance}`;
+        messageDisplay.textContent = '';
+        messageDisplay.classList.remove('win');
+        spinButton.disabled = true;
+
+        const finalGrid = [
+            Array(5).fill().map(getRandomSymbol),
+            Array(5).fill().map(getRandomSymbol),
+            Array(5).fill().map(getRandomSymbol)
+        ];
+
+        const durations = [1.0, 1.4, 1.8, 2.2, 2.6];
+
+        reelStrips.forEach((strip, col) => {
+            const topSym = finalGrid[0][col];
+            const midSym = finalGrid[1][col];
+            const botSym = finalGrid[2][col];
+            const distance = prepareStrip(strip, topSym, midSym, botSym);
+            strip.style.transition = 'none';
+            strip.style.transform = 'translateY(0)';
+            strip.offsetHeight;
+            strip.style.transition = `transform ${durations[col]}s ease-out`;
+            strip.style.transform = `translateY(-${distance}px)`;
+            setTimeout(playStopSound, durations[col] * 1000 - 80);
+        });
+
+        setTimeout(() => {
+            checkWins(finalGrid);
+            spinButton.disabled = false;
+        }, 3200);
+    }
+
+    function checkWins(grid) {
+        let totalWin = 0;
+        let winningPaylines = [];
+        let wonItemsThisSpin = new Set();
+
+        const linesToCheck = [];
+        if (activePaylines >= 1) linesToCheck.push({name: 'center', row: 1, el: paylines.center});
+        if (activePaylines >= 2) linesToCheck.push({name: 'top',    row: 0, el: paylines.top});
+        if (activePaylines >= 3) linesToCheck.push({name: 'bottom', row: 2, el: paylines.bottom});
+
+        linesToCheck.forEach(line => {
+            const rowSym = grid[line.row];
+            let i = 0;
+            while (i < rowSym.length) {
+                let j = i + 1;
+                while (j < rowSym.length && rowSym[j] === rowSym[i]) j++;
+                const len = j - i;
+                if (len >= 2) {
+                    const sym = rowSym[i];
+                    let payout = len === 2 ? 10 :
+                                 len === 3 ? winAmounts[sym] * 2 :
+                                 len === 4 ? winAmounts[sym] * 5 :
+                                 len === 5 ? winAmounts[sym] * 10 : 0;
+
+                    totalWin += payout;
+                    wonItemsThisSpin.add(sym);
+
+                    for (let k = i; k < j; k++) {
+                        reelHighlights[k].classList.add('won');
+                    }
+                    line.el.classList.add('won');
+                    winningPaylines.push(line.name);
+                }
+                i = j;
             }
-        }
+        });
 
-        function prepareStrip(strip, topSym, midSym, botSym) {
-            strip.innerHTML = '';
-            for (let i = 0; i < visibleSymbols + extraSymbols; i++) {
-                const s = document.createElement('div');
-                s.classList.add('symbol');
-                s.textContent = getRandomSymbol();
-                strip.appendChild(s);
-            }
-            const spinAmount = extraSymbols - Math.floor(Math.random() * 4);
-            strip.children[spinAmount].textContent     = topSym;
-            strip.children[spinAmount + 1].textContent = midSym;
-            strip.children[spinAmount + 2].textContent = botSym;
-            return spinAmount * symbolHeight;
-        }
+        // Award items
+        wonItemsThisSpin.forEach(sym => addToInventory(sym));
 
-        function updateBetDisplay() {
-            const bet = baseBet * activePaylines;
-            betInfo.textContent = `Bet: ${bet} credits | Paylines: ${activePaylines}`;
-        }
-
-        function setActivePaylines(num) {
-            activePaylines = num;
-            lineButtons.forEach(b => b.classList.toggle('active', parseInt(b.dataset.lines) === num));
-            paylines.top.classList.toggle('active', num >= 2);
-            paylines.center.classList.toggle('active', num >= 1);
-            paylines.bottom.classList.toggle('active', num >= 3);
-            updateBetDisplay();
-        }
-
-        lineButtons.forEach(btn => btn.addEventListener('click', () => setActivePaylines(parseInt(btn.dataset.lines))));
-
-        function clearAllHighlights() {
-            reelHighlights.forEach(h => h.classList.remove('won'));
-            Object.values(paylines).forEach(p => p.classList.remove('won'));
-        }
-
-        function addToInventory(symbol) {
-            inventory[symbol] = (inventory[symbol] || 0) + 1;
-            renderInventory();
-        }
-
-        function renderInventory() {
-            wonItemsList.innerHTML = '';
-            Object.entries(inventory).forEach(([sym, count]) => {
-                const li = document.createElement('li');
-                li.className = 'item';
-                li.innerHTML = `
-                    ${sym}
-                    <span class="item-count">${count}</span>
-                    <div style="font-size:12px; margin-top:4px;">${symbolNames[sym]}</div>
-                `;
-                wonItemsList.appendChild(li);
-            });
-
-            if (Object.keys(inventory).length === 0) {
-                wonItemsList.innerHTML = '<li style="grid-column: 1 / -1; opacity:0.6;">No items collected yet</li>';
-            }
-        }
-
-        function spin() {
-            const bet = baseBet * activePaylines;
-            if (balance < bet) {
-                messageDisplay.textContent = 'Not enough planting credits! Refresh to restart.';
-                return;
-            }
-
-            clearAllHighlights();
-            balance -= bet;
+        if (totalWin > 0 || wonItemsThisSpin.size > 0) {
+            balance += totalWin;
             balanceDisplay.textContent = `Planting Credits: ${balance}`;
-            messageDisplay.textContent = '';
-            messageDisplay.classList.remove('win');
-            spinButton.disabled = true;
 
-            const finalGrid = [
-                Array(5).fill().map(getRandomSymbol),
-                Array(5).fill().map(getRandomSymbol),
-                Array(5).fill().map(getRandomSymbol)
-            ];
+            let msg = wonItemsThisSpin.size > 0 ? `Collected: ${Array.from(wonItemsThisSpin).join(' ')} ` : '';
+            if (totalWin > 0) msg += `+${totalWin} credits `;
+            msg += `(${winningPaylines.join(', ') || '—'})! 🎉`;
 
-            const durations = [1.0, 1.4, 1.8, 2.2, 2.6];
+            messageDisplay.textContent = msg;
+            messageDisplay.classList.add('win');
 
-            reelStrips.forEach((strip, col) => {
-                const topSym = finalGrid[0][col];
-                const midSym = finalGrid[1][col];
-                const botSym = finalGrid[2][col];
-                const distance = prepareStrip(strip, topSym, midSym, botSym);
-                strip.style.transition = 'none';
-                strip.style.transform = 'translateY(0)';
-                strip.offsetHeight;
-                strip.style.transition = `transform ${durations[col]}s ease-out`;
-                strip.style.transform = `translateY(-${distance}px)`;
-                setTimeout(playStopSound, durations[col] * 1000 - 80);
-            });
+            if (totalWin >= 200 || wonItemsThisSpin.size >= 3) playMegaSound();
+            else if (totalWin >= 50 || wonItemsThisSpin.size >= 2) playBigWinSound();
+            else playSmallWinSound();
 
             setTimeout(() => {
-                checkWins(finalGrid);
-                spinButton.disabled = false;
-            }, 3200);
+                reelHighlights.forEach((h, i) => {
+                    if (h.classList.contains('won')) reels[i].style.animation = 'win-shake 0.8s';
+                });
+                setTimeout(() => reels.forEach(r => r.style.animation = ''), 800);
+            }, 400);
+        } else {
+            messageDisplay.textContent = 'No growth or finds this time... Try again!';
         }
 
-        function checkWins(grid) {
-            let totalWin = 0;
-            let winningPaylines = [];
-            let wonItemsThisSpin = new Set();
+        setTimeout(clearAllHighlights, 5000);
+    }
 
-            const linesToCheck = [];
-            if (activePaylines >= 1) linesToCheck.push({name: 'center', row: 1, el: paylines.center});
-            if (activePaylines >= 2) linesToCheck.push({name: 'top',    row: 0, el: paylines.top});
-            if (activePaylines >= 3) linesToCheck.push({name: 'bottom', row: 2, el: paylines.bottom});
+    // ────────────────────────────────────────────────
+    // Event Listeners & Init
+    // ────────────────────────────────────────────────
+    lineButtons.forEach(btn => {
+        btn.addEventListener('click', () => setActivePaylines(parseInt(btn.dataset.lines)));
+    });
 
-            linesToCheck.forEach(line => {
-                const rowSym = grid[line.row];
-                let i = 0;
-                while (i < rowSym.length) {
-                    let j = i + 1;
-                    while (j < rowSym.length && rowSym[j] === rowSym[i]) j++;
-                    const len = j - i;
-                    if (len >= 2) {
-                        const sym = rowSym[i];
-                        let payout = len === 2 ? 10 :
-                                     len === 3 ? winAmounts[sym] * 2 :
-                                     len === 4 ? winAmounts[sym] * 5 :
-                                     len === 5 ? winAmounts[sym] * 10 : 0;
-                        totalWin += payout;
+    spinButton.addEventListener('click', spin);
 
-                        // Add the winning symbol as item (once per unique symbol per spin)
-                        wonItemsThisSpin.add(sym);
-
-                        for (let k = i; k < j; k++) {
-                            reelHighlights[k].classList.add('won');
-                        }
-                        line.el.classList.add('won');
-                        winningPaylines.push(line.name);
-                    }
-                    i = j;
-                }
-            });
-
-            // Add won items to inventory
-            wonItemsThisSpin.forEach(sym => addToInventory(sym));
-
-            if (totalWin > 0 || wonItemsThisSpin.size > 0) {
-                balance += totalWin;
-                balanceDisplay.textContent = `Planting Credits: ${balance}`;
-
-                let msg = '';
-                if (wonItemsThisSpin.size > 0) {
-                    msg += `Collected: ${Array.from(wonItemsThisSpin).join(' ')} `;
-                }
-                if (totalWin > 0) {
-                    msg += `+${totalWin} credits `;
-                }
-                msg += `(${winningPaylines.join(', ') || '—'})! 🎉`;
-
-                messageDisplay.textContent = msg;
-                messageDisplay.classList.add('win');
-
-                if (totalWin >= 200 || wonItemsThisSpin.size >= 3) playMegaSound();
-                else if (totalWin >= 50 || wonItemsThisSpin.size >= 2) playBigWinSound();
-                else playSmallWinSound();
-
-                setTimeout(() => {
-                    reelHighlights.forEach((h,i) => {
-                        if (h.classList.contains('won')) reels[i].style.animation = 'win-shake 0.8s';
-                    });
-                    setTimeout(() => reels.forEach(r => r.style.animation = ''), 800);
-                }, 400);
-            } else {
-                messageDisplay.textContent = 'No growth or finds this time... Try again!';
-            }
-
-            setTimeout(clearAllHighlights, 5000);
-        }
-
-        // Initialize
-        reelStrips.forEach(createStrip);
-        setActivePaylines(1);
-        spinButton.addEventListener('click', spin);
-        renderInventory();
-    </script>
+    // Initial setup
+    reelStrips.forEach(createStrip);
+    setActivePaylines(1);
+    renderInventory();
+</script>
 </body>
 </html>
+
