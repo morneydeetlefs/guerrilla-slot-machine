@@ -5,19 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guerrilla Gardener's Fortune Slot Machine</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #228B22; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .slot-machine { background-color: #006400; border: 5px solid #8B4513; border-radius: 10px; padding: 20px; text-align: center; max-width: 900px; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #228B22;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .slot-machine {
+            background-color: #006400;
+            border: 5px solid #8B4513;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            max-width: 900px;
+            width: 100%;
+        }
         #bet-info { font-size: 20px; color: #FFD700; margin-bottom: 10px; font-weight: bold; }
-        #payline-selector { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; }
-        .line-btn { background: #006400; color: #fff; border: 2px solid #FFD700; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
-        .line-btn.active { background: #FFD700; color: #006400; box-shadow: 0 0 12px #FFD700; }
+        #payline-selector { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+        .line-btn {
+            background: #006400;
+            color: #fff;
+            border: 2px solid #FFD700;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .line-btn.active {
+            background: #FFD700;
+            color: #006400;
+            box-shadow: 0 0 12px #FFD700;
+        }
         .line-btn:hover:not(.active) { background: #228B22; }
         .reels-container { position: relative; height: 300px; margin-bottom: 20px; }
-        .reels { display: flex; justify-content: center; height: 100%; gap: 8px; }
-        .reel { width: 90px; height: 300px; background-color: #fff; border: 2px solid #000; overflow: hidden; position: relative; flex-shrink: 0; }
-        .reel-strip { display: flex; flex-direction: column; align-items: center; position: absolute; top: 0; left: 0; width: 100%; transition: transform 2s ease-out; }
-        .symbol { height: 100px; width: 100%; display: flex; justify-content: center; align-items: center; font-size: 55px; box-sizing: border-box; }
-        .payline { position: absolute; left: 0; right: 0; height: 4px; background: linear-gradient(to right, transparent 0%, #FFD700 15%, #FFD700 85%, transparent 100%); opacity: 0.25; transition: all 0.4s; z-index: 3; pointer-events: none; }
+        .reels { display: flex; justify-content: center; height: 100%; gap: 8px; flex-wrap: wrap; }
+        .reel {
+            width: 90px;
+            height: 300px;
+            background-color: #fff;
+            border: 2px solid #000;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .reel-strip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            transition: transform 2s ease-out;
+        }
+        .symbol {
+            height: 100px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 55px;
+            box-sizing: border-box;
+        }
+        .payline {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, transparent 0%, #FFD700 15%, #FFD700 85%, transparent 100%);
+            opacity: 0.25;
+            transition: all 0.4s;
+            z-index: 3;
+            pointer-events: none;
+        }
         .payline.active { opacity: 0.7; box-shadow: 0 0 10px #FFD700; }
         .payline.won { opacity: 1; box-shadow: 0 0 25px #FFEB3B; animation: payline-pulse 1.2s infinite; }
         @keyframes payline-pulse { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.08); } }
@@ -25,7 +92,17 @@
         .reel-highlight.won { background: rgba(255, 215, 0, 0.35); animation: highlight-glow 1.2s infinite alternate; }
         @keyframes highlight-glow { from { background: rgba(255, 215, 0, 0.25); } to { background: rgba(255, 215, 0, 0.45); } }
         @keyframes win-shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); } 20%, 40%, 60%, 80% { transform: translateX(4px); } }
-        #spin-button { background-color: #FFD700; color: #006400; border: none; padding: 15px 30px; font-size: 20px; cursor: pointer; border-radius: 8px; margin: 15px 0 10px; font-weight: bold; }
+        #spin-button {
+            background-color: #FFD700;
+            color: #006400;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 8px;
+            margin: 15px 0 10px;
+            font-weight: bold;
+        }
         #spin-button:hover { background-color: #FFEC8B; }
         #spin-button:disabled { background: #555; cursor: not-allowed; }
         #balance { font-size: 28px; margin-bottom: 10px; font-weight: bold; }
@@ -38,13 +115,97 @@
             border: 2px solid #8B4513;
             border-radius: 8px;
             padding: 15px;
-            max-height: 220px;
-            overflow-y: auto;
+            margin-top: 20px;
         }
-        #inventory h3 { margin: 0 0 12px 0; color: #FFD700; }
-        .item-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
-        .item { background: rgba(255,255,255,0.15); border-radius: 6px; padding: 8px; text-align: center; font-size: 40px; position: relative; }
-        .item-count { position: absolute; bottom: -6px; right: -6px; background: #FFD700; color: #006400; font-size: 12px; font-weight: bold; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #006400; }
+        #inventory h3 { margin: 0 0 12px 0; color: #FFD700; text-align: center; }
+        .item-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 12px;
+        }
+        .item {
+            background: rgba(255,255,255,0.12);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            border: 2px solid transparent;
+        }
+        .item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+        }
+        .item-count {
+            position: absolute;
+            bottom: -8px;
+            right: -8px;
+            background: #FFD700;
+            color: #006400;
+            font-size: 12px;
+            font-weight: bold;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #006400;
+        }
+
+        /* Modal / Popup */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: #1b5e20;
+            border: 4px solid #8B4513;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 380px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            animation: modal-pop 0.3s ease-out;
+        }
+        @keyframes modal-pop {
+            from { transform: scale(0.7); opacity: 0; }
+            to   { transform: scale(1); opacity: 1; }
+        }
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            color: #FFD700;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .modal-emoji { font-size: 90px; margin: 10px 0 15px; }
+        .modal-title { font-size: 24px; margin: 10px 0; color: #FFEB3B; }
+        .modal-rarity {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 6px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 8px 0 15px;
+        }
+        .modal-desc { font-size: 16px; opacity: 0.9; margin: 10px 0 20px; line-height: 1.4; }
+        .modal-count { font-size: 20px; color: #81d4fa; margin-bottom: 15px; }
+        .modal-multiplier { font-size: 18px; color: #66bb6a; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -76,311 +237,270 @@
         <div id="message"></div>
 
         <div id="inventory">
-            <h3>Won Items</h3>
+            <h3>Won Items (click to view details)</h3>
             <ul class="item-list" id="won-items-list"></ul>
         </div>
     </div>
 
+    <!-- Item Detail Modal -->
+    <div class="modal" id="item-modal">
+        <div class="modal-content">
+            <span class="modal-close" id="modal-close">×</span>
+            <div class="modal-emoji" id="modal-emoji"></div>
+            <div class="modal-title" id="modal-title"></div>
+            <div class="modal-rarity" id="modal-rarity"></div>
+            <div class="modal-desc" id="modal-desc"></div>
+            <div class="modal-count" id="modal-count"></div>
+            <div class="modal-multiplier" id="modal-multiplier"></div>
+        </div>
+    </div>
+
     <script>
-    // ────────────────────────────────────────────────
-    // Constants & Configuration
-    // ────────────────────────────────────────────────
-    const symbols = ['🌱', '🌿', '🌳', '🛠️', '💧'];
+        // ────────────────────────────────────────────────
+        // Constants & Data
+        // ────────────────────────────────────────────────
+        const symbols = ['🌱', '🌿', '🌳', '🛠️', '💧'];
 
-    const symbolNames = {
-        '🌱': 'Seed Packet',
-        '🌿': 'Herb Cutting',
-        '🌳': 'Young Tree',
-        '🛠️': 'Gardening Tool',
-        '💧': 'Watering Can'
-    };
+        const symbolData = {
+            '🌱': { name: 'Seed Packet',     desc: 'A small packet of wildflower seeds perfect for starting a secret garden.', rarity: 'Common',    color: '#e0e0e0', mult: 1.0 },
+            '💧': { name: 'Watering Can',    desc: 'Essential for keeping your guerrilla plants alive during dry spells.',     rarity: 'Uncommon',  color: '#81d4fa', mult: 1.5 },
+            '🌿': { name: 'Herb Cutting',    desc: 'Fresh basil or mint — great for urban herbal remedies and cooking.',      rarity: 'Rare',      color: '#66bb6a', mult: 2.0 },
+            '🛠️': { name: 'Gardening Tool',  desc: 'A sturdy trowel for digging in tough city soil without being noticed.',   rarity: 'Epic',      color: '#ab47bc', mult: 3.0 },
+            '🌳': { name: 'Young Tree',      desc: 'A baby tree ready to grow tall and provide shade for future generations.', rarity: 'Legendary', color: '#ffb300', mult: 5.0 }
+        };
 
-    // Rarity system
-    const rarityData = {
-        '🌱': { tier: 'Common',    color: '#e0e0e0',  multiplier: 1.0,  badge: 'C' },
-        '💧': { tier: 'Uncommon',  color: '#81d4fa',  multiplier: 1.5,  badge: 'U' },
-        '🌿': { tier: 'Rare',      color: '#66bb6a',  multiplier: 2.0,  badge: 'R' },
-        '🛠️': { tier: 'Epic',      color: '#ab47bc',  multiplier: 3.0,  badge: 'E' },
-        '🌳': { tier: 'Legendary', color: '#ffb300',  multiplier: 5.0,  badge: 'L' }
-    };
+        const winAmounts = {
+            '🌱': 20, '🌿': 30, '🌳': 50, '🛠️': 40, '💧': 25
+        };
 
-    const winAmounts = {
-        '🌱': 20,
-        '🌿': 30,
-        '🌳': 50,
-        '🛠️': 40,
-        '💧': 25
-    };
+        const baseBet = 20;
+        const symbolHeight = 100;
+        const visibleSymbols = 3;
+        const extraSymbols = 30;
 
-    const baseBet = 20;
-    const symbolHeight = 100;
-    const visibleSymbols = 3;
-    const extraSymbols = 30;
+        // DOM
+        const reels = document.querySelectorAll('.reel');
+        const reelStrips = Array.from(reels).map(r => r.querySelector('.reel-strip'));
+        const reelHighlights = Array.from(reels).map(r => r.querySelector('.reel-highlight'));
+        const paylines = {
+            top: document.getElementById('payline-top'),
+            center: document.getElementById('payline-center'),
+            bottom: document.getElementById('payline-bottom')
+        };
+        const spinButton = document.getElementById('spin-button');
+        const balanceDisplay = document.getElementById('balance');
+        const betInfo = document.getElementById('bet-info');
+        const messageDisplay = document.getElementById('message');
+        const lineButtons = document.querySelectorAll('.line-btn');
+        const wonItemsList = document.getElementById('won-items-list');
+        const modal = document.getElementById('item-modal');
+        const modalClose = document.getElementById('modal-close');
 
-    // DOM elements
-    const reels = document.querySelectorAll('.reel');
-    const reelStrips = Array.from(reels).map(r => r.querySelector('.reel-strip'));
-    const reelHighlights = Array.from(reels).map(r => r.querySelector('.reel-highlight'));
-    const paylines = {
-        top: document.getElementById('payline-top'),
-        center: document.getElementById('payline-center'),
-        bottom: document.getElementById('payline-bottom')
-    };
-    const spinButton = document.getElementById('spin-button');
-    const balanceDisplay = document.getElementById('balance');
-    const betInfo = document.getElementById('bet-info');
-    const messageDisplay = document.getElementById('message');
-    const lineButtons = document.querySelectorAll('.line-btn');
-    const wonItemsList = document.getElementById('won-items-list');
+        let balance = 500;
+        let activePaylines = 1;
+        const inventory = {};
 
-    // State
-    let balance = 500;
-    let activePaylines = 1;
-    const inventory = {}; // { '🌱': 3, '🌳': 1, ... }
+        // Audio (shortened)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(f,d,t='sine'){const o=audioCtx.createOscillator();o.type=t;o.frequency.value=f;const g=audioCtx.createGain();g.gain.value=0.4;o.connect(g);g.connect(audioCtx.destination);o.start();g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+d/1000);o.stop(audioCtx.currentTime+d/1000);}
+        function playSpinSound(){playSound(700,250,'sawtooth');setTimeout(()=>playSound(550,250,'sawtooth'),150);setTimeout(()=>playSound(400,300,'sawtooth'),350);}
+        function playStopSound(){playSound(120,120,'square');}
+        function playSmallWinSound(){playSound(523,300);setTimeout(()=>playSound(659,300),200);}
+        function playBigWinSound(){playSound(440,250);setTimeout(()=>playSound(554,250),200);setTimeout(()=>playSound(659,250),450);setTimeout(()=>playSound(784,400),700);}
+        function playMegaSound(){playBigWinSound();setTimeout(()=>{playSound(880,300);setTimeout(()=>playSound(1046,600),250);},1400);}
 
-    // ────────────────────────────────────────────────
-    // Audio
-    // ────────────────────────────────────────────────
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function getRandomSymbol(){return symbols[Math.floor(Math.random()*symbols.length)];}
 
-    function playSound(frequency, duration, type = 'sine') {
-        const osc = audioCtx.createOscillator();
-        osc.type = type;
-        osc.frequency.value = frequency;
-        const gain = audioCtx.createGain();
-        gain.gain.value = 0.4;
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration / 1000);
-        osc.stop(audioCtx.currentTime + duration / 1000);
-    }
-
-    function playSpinSound() { playSound(700,250,'sawtooth'); setTimeout(()=>playSound(550,250,'sawtooth'),150); setTimeout(()=>playSound(400,300,'sawtooth'),350); }
-    function playStopSound() { playSound(120,120,'square'); }
-    function playSmallWinSound() { playSound(523,300); setTimeout(()=>playSound(659,300),200); }
-    function playBigWinSound() { playSound(440,250); setTimeout(()=>playSound(554,250),200); setTimeout(()=>playSound(659,250),450); setTimeout(()=>playSound(784,400),700); }
-    function playMegaSound() { playBigWinSound(); setTimeout(()=>{playSound(880,300); setTimeout(()=>playSound(1046,600),250);},1400); }
-
-    // ────────────────────────────────────────────────
-    // Utility Functions
-    // ────────────────────────────────────────────────
-    function getRandomSymbol() {
-        return symbols[Math.floor(Math.random() * symbols.length)];
-    }
-
-    function createStrip(strip) {
-        strip.innerHTML = '';
-        for (let i = 0; i < visibleSymbols + extraSymbols; i++) {
-            const s = document.createElement('div');
-            s.classList.add('symbol');
-            s.textContent = getRandomSymbol();
-            strip.appendChild(s);
-        }
-    }
-
-    function prepareStrip(strip, topSym, midSym, botSym) {
-        strip.innerHTML = '';
-        for (let i = 0; i < visibleSymbols + extraSymbols; i++) {
-            const s = document.createElement('div');
-            s.classList.add('symbol');
-            s.textContent = getRandomSymbol();
-            strip.appendChild(s);
-        }
-        const spinAmount = extraSymbols - Math.floor(Math.random() * 4);
-        strip.children[spinAmount].textContent     = topSym;
-        strip.children[spinAmount + 1].textContent = midSym;
-        strip.children[spinAmount + 2].textContent = botSym;
-        return spinAmount * symbolHeight;
-    }
-
-    function updateBetDisplay() {
-        const bet = baseBet * activePaylines;
-        betInfo.textContent = `Bet: ${bet} credits | Paylines: ${activePaylines}`;
-    }
-
-    function setActivePaylines(num) {
-        activePaylines = num;
-        lineButtons.forEach(b => b.classList.toggle('active', parseInt(b.dataset.lines) === num));
-        paylines.top.classList.toggle('active', num >= 2);
-        paylines.center.classList.toggle('active', num >= 1);
-        paylines.bottom.classList.toggle('active', num >= 3);
-        updateBetDisplay();
-    }
-
-    function clearAllHighlights() {
-        reelHighlights.forEach(h => h.classList.remove('won'));
-        Object.values(paylines).forEach(p => p.classList.remove('won'));
-    }
-
-    function addToInventory(symbol) {
-        inventory[symbol] = (inventory[symbol] || 0) + 1;
-        renderInventory();
-    }
-
-    function renderInventory() {
-        wonItemsList.innerHTML = '';
-        const entries = Object.entries(inventory);
-        if (entries.length === 0) {
-            wonItemsList.innerHTML = '<li style="grid-column: 1 / -1; opacity:0.6; text-align:center;">No items collected yet</li>';
-            return;
-        }
-
-        entries.sort((a,b) => {
-            // Sort by rarity (legendary first)
-            const order = ['Legendary','Epic','Rare','Uncommon','Common'];
-            return order.indexOf(rarityData[a[0]].tier) - order.indexOf(rarityData[b[0]].tier);
-        });
-
-        entries.forEach(([sym, count]) => {
-            const rarity = rarityData[sym];
-            const li = document.createElement('li');
-            li.className = 'item';
-            li.style.borderColor = rarity.color;
-            li.style.boxShadow = `0 0 8px ${rarity.color}80`;
-            li.innerHTML = `
-                <div style="font-size:48px;">${sym}</div>
-                <div style="font-size:11px; opacity:0.9; margin:4px 0 2px;">${symbolNames[sym]}</div>
-                <div style="font-size:11px; color:${rarity.color}; font-weight:bold;">
-                    ${rarity.tier} • ×${rarity.multiplier}
-                </div>
-                <span class="item-count" style="background:${rarity.color}; color:#000;">${count}</span>
-            `;
-            wonItemsList.appendChild(li);
-        });
-    }
-
-    // ────────────────────────────────────────────────
-    // Game Logic
-    // ────────────────────────────────────────────────
-    function spin() {
-        const bet = baseBet * activePaylines;
-        if (balance < bet) {
-            messageDisplay.textContent = 'Not enough planting credits! Refresh to restart.';
-            return;
-        }
-
-        clearAllHighlights();
-        balance -= bet;
-        balanceDisplay.textContent = `Planting Credits: ${balance}`;
-        messageDisplay.textContent = '';
-        messageDisplay.classList.remove('win');
-        spinButton.disabled = true;
-
-        const finalGrid = [
-            Array(5).fill().map(getRandomSymbol),
-            Array(5).fill().map(getRandomSymbol),
-            Array(5).fill().map(getRandomSymbol)
-        ];
-
-        const durations = [1.0, 1.4, 1.8, 2.2, 2.6];
-
-        reelStrips.forEach((strip, col) => {
-            const topSym = finalGrid[0][col];
-            const midSym = finalGrid[1][col];
-            const botSym = finalGrid[2][col];
-            const distance = prepareStrip(strip, topSym, midSym, botSym);
-            strip.style.transition = 'none';
-            strip.style.transform = 'translateY(0)';
-            strip.offsetHeight;
-            strip.style.transition = `transform ${durations[col]}s ease-out`;
-            strip.style.transform = `translateY(-${distance}px)`;
-            setTimeout(playStopSound, durations[col] * 1000 - 80);
-        });
-
-        setTimeout(() => {
-            checkWins(finalGrid);
-            spinButton.disabled = false;
-        }, 3200);
-    }
-
-    function checkWins(grid) {
-        let totalWin = 0;
-        let winningPaylines = [];
-        let wonItemsThisSpin = new Set();
-
-        const linesToCheck = [];
-        if (activePaylines >= 1) linesToCheck.push({name: 'center', row: 1, el: paylines.center});
-        if (activePaylines >= 2) linesToCheck.push({name: 'top',    row: 0, el: paylines.top});
-        if (activePaylines >= 3) linesToCheck.push({name: 'bottom', row: 2, el: paylines.bottom});
-
-        linesToCheck.forEach(line => {
-            const rowSym = grid[line.row];
-            let i = 0;
-            while (i < rowSym.length) {
-                let j = i + 1;
-                while (j < rowSym.length && rowSym[j] === rowSym[i]) j++;
-                const len = j - i;
-                if (len >= 2) {
-                    const sym = rowSym[i];
-                    const basePayout = len === 2 ? 10 :
-                                       len === 3 ? winAmounts[sym] * 2 :
-                                       len === 4 ? winAmounts[sym] * 5 :
-                                       len === 5 ? winAmounts[sym] * 10 : 0;
-
-                    // Apply rarity multiplier to credits won
-                    const rarityMult = rarityData[sym]?.multiplier || 1;
-                    const payout = Math.round(basePayout * rarityMult);
-
-                    totalWin += payout;
-                    wonItemsThisSpin.add(sym);
-
-                    for (let k = i; k < j; k++) {
-                        reelHighlights[k].classList.add('won');
-                    }
-                    line.el.classList.add('won');
-                    winningPaylines.push(line.name);
-                }
-                i = j;
+        function createStrip(strip){
+            strip.innerHTML='';
+            for(let i=0;i<visibleSymbols+extraSymbols;i++){
+                const s=document.createElement('div');s.classList.add('symbol');s.textContent=getRandomSymbol();strip.appendChild(s);
             }
-        });
-
-        // Award items
-        wonItemsThisSpin.forEach(sym => addToInventory(sym));
-
-        if (totalWin > 0 || wonItemsThisSpin.size > 0) {
-            balance += totalWin;
-            balanceDisplay.textContent = `Planting Credits: ${balance}`;
-
-            let msg = wonItemsThisSpin.size > 0 ? `Collected: ${Array.from(wonItemsThisSpin).join(' ')} ` : '';
-            if (totalWin > 0) msg += `+${totalWin} credits `;
-            msg += `(${winningPaylines.join(', ') || '—'})! 🎉`;
-
-            messageDisplay.textContent = msg;
-            messageDisplay.classList.add('win');
-
-            if (totalWin >= 200 || wonItemsThisSpin.has('🌳')) playMegaSound();
-            else if (totalWin >= 50 || wonItemsThisSpin.size >= 2) playBigWinSound();
-            else playSmallWinSound();
-
-            setTimeout(() => {
-                reelHighlights.forEach((h, i) => {
-                    if (h.classList.contains('won')) reels[i].style.animation = 'win-shake 0.8s';
-                });
-                setTimeout(() => reels.forEach(r => r.style.animation = ''), 800);
-            }, 400);
-        } else {
-            messageDisplay.textContent = 'No growth or finds this time... Try again!';
         }
 
-        setTimeout(clearAllHighlights, 5000);
-    }
+        function prepareStrip(strip,topSym,midSym,botSym){
+            strip.innerHTML='';
+            for(let i=0;i<visibleSymbols+extraSymbols;i++){
+                const s=document.createElement('div');s.classList.add('symbol');s.textContent=getRandomSymbol();strip.appendChild(s);
+            }
+            const spinAmount=extraSymbols-Math.floor(Math.random()*4);
+            strip.children[spinAmount].textContent=topSym;
+            strip.children[spinAmount+1].textContent=midSym;
+            strip.children[spinAmount+2].textContent=botSym;
+            return spinAmount*symbolHeight;
+        }
 
-    // ────────────────────────────────────────────────
-    // Event Listeners & Init
-    // ────────────────────────────────────────────────
-    lineButtons.forEach(btn => {
-        btn.addEventListener('click', () => setActivePaylines(parseInt(btn.dataset.lines)));
-    });
+        function updateBetDisplay(){
+            const bet=baseBet*activePaylines;
+            betInfo.textContent=`Bet: ${bet} credits | Paylines: ${activePaylines}`;
+        }
 
-    spinButton.addEventListener('click', spin);
+        function setActivePaylines(num){
+            activePaylines=num;
+            lineButtons.forEach(b=>b.classList.toggle('active',parseInt(b.dataset.lines)===num));
+            paylines.top.classList.toggle('active',num>=2);
+            paylines.center.classList.toggle('active',num>=1);
+            paylines.bottom.classList.toggle('active',num>=3);
+            updateBetDisplay();
+        }
 
-    // Initial setup
-    reelStrips.forEach(createStrip);
-    setActivePaylines(1);
-    renderInventory();
-</script>
+        function clearAllHighlights(){
+            reelHighlights.forEach(h=>h.classList.remove('won'));
+            Object.values(paylines).forEach(p=>p.classList.remove('won'));
+        }
+
+        function addToInventory(symbol){
+            inventory[symbol]=(inventory[symbol]||0)+1;
+            renderInventory();
+        }
+
+        function showItemDetail(symbol){
+            const data = symbolData[symbol];
+            if(!data) return;
+
+            document.getElementById('modal-emoji').textContent = symbol;
+            document.getElementById('modal-title').textContent = data.name;
+            const rarityEl = document.getElementById('modal-rarity');
+            rarityEl.textContent = data.rarity;
+            rarityEl.style.background = data.color + '33';
+            rarityEl.style.color = data.color;
+            rarityEl.style.border = `2px solid ${data.color}`;
+            document.getElementById('modal-desc').textContent = data.desc;
+            document.getElementById('modal-count').textContent = `You own: ${inventory[symbol] || 0}`;
+            document.getElementById('modal-multiplier').textContent = `Credit Value: ×${data.mult}`;
+            modal.style.display = 'flex';
+        }
+
+        function renderInventory(){
+            wonItemsList.innerHTML='';
+            const entries=Object.entries(inventory);
+            if(entries.length===0){
+                wonItemsList.innerHTML='<li style="grid-column:1/-1;opacity:0.6;text-align:center;">No items collected yet</li>';
+                return;
+            }
+            entries.sort((a,b)=>{
+                const order=['Legendary','Epic','Rare','Uncommon','Common'];
+                return order.indexOf(symbolData[a[0]]?.rarity||'Common') - order.indexOf(symbolData[b[0]]?.rarity||'Common');
+            });
+            entries.forEach(([sym,count])=>{
+                const data=symbolData[sym];
+                const li=document.createElement('li');
+                li.className='item';
+                li.style.borderColor=data.color;
+                li.innerHTML=`
+                    ${sym}
+                    <span class="item-count">${count}</span>
+                `;
+                li.addEventListener('click',()=>showItemDetail(sym));
+                wonItemsList.appendChild(li);
+            });
+        }
+
+        // Modal close handlers
+        modalClose.addEventListener('click',()=>modal.style.display='none');
+        modal.addEventListener('click',e=>{if(e.target===modal)modal.style.display='none';});
+
+        // ────────────────────────────────────────────────
+        // Spin & Win Logic (unchanged core, only inventory call added)
+        // ────────────────────────────────────────────────
+        function spin(){
+            const bet=baseBet*activePaylines;
+            if(balance<bet){
+                messageDisplay.textContent='Not enough planting credits! Refresh to restart.';
+                return;
+            }
+            clearAllHighlights();
+            balance-=bet;
+            balanceDisplay.textContent=`Planting Credits: ${balance}`;
+            messageDisplay.textContent='';
+            messageDisplay.classList.remove('win');
+            spinButton.disabled=true;
+
+            const finalGrid=[
+                Array(5).fill().map(getRandomSymbol),
+                Array(5).fill().map(getRandomSymbol),
+                Array(5).fill().map(getRandomSymbol)
+            ];
+
+            const durations=[1.0,1.4,1.8,2.2,2.6];
+
+            reelStrips.forEach((strip,col)=>{
+                const t=finalGrid[0][col],m=finalGrid[1][col],b=finalGrid[2][col];
+                const distance=prepareStrip(strip,t,m,b);
+                strip.style.transition='none';
+                strip.style.transform='translateY(0)';
+                strip.offsetHeight;
+                strip.style.transition=`transform ${durations[col]}s ease-out`;
+                strip.style.transform=`translateY(-${distance}px)`;
+                setTimeout(playStopSound,durations[col]*1000-80);
+            });
+
+            setTimeout(()=>{checkWins(finalGrid);spinButton.disabled=false;},3200);
+        }
+
+        function checkWins(grid){
+            let totalWin=0;
+            let winningPaylines=[];
+            let wonItemsThisSpin=new Set();
+
+            const linesToCheck=[];
+            if(activePaylines>=1)linesToCheck.push({name:'center',row:1,el:paylines.center});
+            if(activePaylines>=2)linesToCheck.push({name:'top',row:0,el:paylines.top});
+            if(activePaylines>=3)linesToCheck.push({name:'bottom',row:2,el:paylines.bottom});
+
+            linesToCheck.forEach(line=>{
+                const rowSym=grid[line.row];
+                let i=0;
+                while(i<rowSym.length){
+                    let j=i+1;
+                    while(j<rowSym.length&&rowSym[j]===rowSym[i])j++;
+                    const len=j-i;
+                    if(len>=2){
+                        const sym=rowSym[i];
+                        const base=len===2?10:len===3?winAmounts[sym]*2:len===4?winAmounts[sym]*5:len===5?winAmounts[sym]*10:0;
+                        const mult=symbolData[sym]?.mult||1;
+                        totalWin+=Math.round(base*mult);
+                        wonItemsThisSpin.add(sym);
+                        for(let k=i;k<j;k++)reelHighlights[k].classList.add('won');
+                        line.el.classList.add('won');
+                        winningPaylines.push(line.name);
+                    }
+                    i=j;
+                }
+            });
+
+            wonItemsThisSpin.forEach(sym=>addToInventory(sym));
+
+            if(totalWin>0||wonItemsThisSpin.size>0){
+                balance+=totalWin;
+                balanceDisplay.textContent=`Planting Credits: ${balance}`;
+                let msg=wonItemsThisSpin.size>0?`Collected: ${Array.from(wonItemsThisSpin).join(' ')} `:'';
+                if(totalWin>0)msg+=`+${totalWin} credits `;
+                msg+=`(${winningPaylines.join(', ')||'—'})! 🎉`;
+                messageDisplay.textContent=msg;
+                messageDisplay.classList.add('win');
+
+                if(totalWin>=200||wonItemsThisSpin.has('🌳'))playMegaSound();
+                else if(totalWin>=50||wonItemsThisSpin.size>=2)playBigWinSound();
+                else playSmallWinSound();
+
+                setTimeout(()=>{
+                    reelHighlights.forEach((h,i)=>{if(h.classList.contains('won'))reels[i].style.animation='win-shake 0.8s';});
+                    setTimeout(()=>reels.forEach(r=>r.style.animation=''),800);
+                },400);
+            }else{
+                messageDisplay.textContent='No growth or finds this time... Try again!';
+            }
+
+            setTimeout(clearAllHighlights,5000);
+        }
+
+        // Init
+        reelStrips.forEach(createStrip);
+        setActivePaylines(1);
+        renderInventory();
+        lineButtons.forEach(btn=>btn.addEventListener('click',()=>setActivePaylines(parseInt(btn.dataset.lines))));
+        spinButton.addEventListener('click',spin);
+    </script>
 </body>
 </html>
-
-
