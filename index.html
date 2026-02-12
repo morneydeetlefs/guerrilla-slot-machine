@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guerrilla Gardener's Fortune Slot Machine</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #228B22; /* Forest green for gardening theme */
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .slot-machine {
+            background-color: #006400; /* Dark green */
+            border: 5px solid #8B4513; /* Earthy brown border */
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        .reels {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .reel {
+            width: 100px;
+            height: 300px;
+            background-color: #fff;
+            border: 2px solid #000;
+            margin: 0 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 50px; /* Big emojis */
+            overflow: hidden;
+            position: relative;
+        }
+        .symbol {
+            position: absolute;
+            top: 0;
+            transition: top 0.1s linear;
+        }
+        #spin-button {
+            background-color: #FFD700; /* Gold for fortune */
+            color: #006400;
+            border: none;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        #spin-button:hover {
+            background-color: #FFEC8B;
+        }
+        #spin-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #balance {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        #message {
+            font-size: 18px;
+            color: #FFD700;
+        }
+    </style>
+</head>
+<body>
+    <div class="slot-machine">
+        <h1>Guerrilla Gardener's Fortune</h1>
+        <div id="balance">Seed Credits: 100</div>
+        <div class="reels">
+            <div class="reel" id="reel1"></div>
+            <div class="reel" id="reel2"></div>
+            <div class="reel" id="reel3"></div>
+        </div>
+        <button id="spin-button">Spin to Plant!</button>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        const symbols = ['🌱', '🌿', '🌳', '🛠️', '💧']; // Guerrilla gardening symbols
+        const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+        const spinButton = document.getElementById('spin-button');
+        const balanceDisplay = document.getElementById('balance');
+        const messageDisplay = document.getElementById('message');
+        let balance = 100;
+        const spinCost = 10;
+        const winAmounts = {
+            '🌱': 20,  // Seed match: Small win for starting small
+            '🌿': 30,  // Herb: Medium for quick growth
+            '🌳': 50,  // Tree: Big for lasting impact
+            '🛠️': 40, // Tool: Utility win
+            '💧': 25   // Water: Essential boost
+        };
+
+        function createSymbols(reel) {
+            reel.innerHTML = ''; // Clear previous
+            for (let i = 0; i < 3; i++) { // Show 3 symbols per reel for visibility
+                const symbol = document.createElement('div');
+                symbol.classList.add('symbol');
+                symbol.textContent = getRandomSymbol();
+                reel.appendChild(symbol);
+            }
+        }
+
+        function getRandomSymbol() {
+            return symbols[Math.floor(Math.random() * symbols.length)];
+        }
+
+        function animateSpin(reel, finalSymbol) {
+            const symbolsInReel = reel.querySelectorAll('.symbol');
+            let offset = 0;
+            const interval = setInterval(() => {
+                offset -= 100; // Move symbols up by height
+                symbolsInReel.forEach(sym => sym.style.top = `${offset}px`);
+                if (offset <= -200) { // After "spinning" past 2 symbols
+                    clearInterval(interval);
+                    // Set final visible symbol (middle one)
+                    symbolsInReel[1].textContent = finalSymbol;
+                    symbolsInReel.forEach(sym => sym.style.top = '0px'); // Reset position
+                }
+            }, 100);
+        }
+
+        function spin() {
+            if (balance < spinCost) {
+                messageDisplay.textContent = 'Out of seeds! Refresh to replant.';
+                spinButton.disabled = true;
+                return;
+            }
+            balance -= spinCost;
+            updateBalance();
+            messageDisplay.textContent = '';
+            spinButton.disabled = true;
+
+            const finalSymbols = reels.map(() => getRandomSymbol());
+
+            reels.forEach((reel, index) => {
+                createSymbols(reel); // Reset with random for animation
+                animateSpin(reel, finalSymbols[index]);
+            });
+
+            setTimeout(() => {
+                checkWin(finalSymbols);
+                spinButton.disabled = false;
+            }, 1500); // Time for animation
+        }
+
+        function checkWin(finalSymbols) {
+            if (finalSymbols[0] === finalSymbols[1] && finalSymbols[1] === finalSymbols[2]) {
+                const winAmount = winAmounts[finalSymbols[0]] || 0;
+                balance += winAmount * 2; // Double for guerrilla bonus!
+                messageDisplay.textContent = `Success! Planted ${finalSymbols[0]} x3 - +${winAmount * 2} seeds!`;
+            } else if (finalSymbols[0] === finalSymbols[1] || finalSymbols[1] === finalSymbols[2] || finalSymbols[0] === finalSymbols[2]) {
+                balance += 10; // Small win for partial match
+                messageDisplay.textContent = 'Partial plant! +10 seeds.';
+            } else {
+                messageDisplay.textContent = 'No growth this time. Try again!';
+            }
+            updateBalance();
+        }
+
+        function updateBalance() {
+            balanceDisplay.textContent = `Seed Credits: ${balance}`;
+        }
+
+        // Initialize reels
+        reels.forEach(createSymbols);
+        spinButton.addEventListener('click', spin);
+    </script>
+</body>
+</html>
