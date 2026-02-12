@@ -62,7 +62,15 @@
         #message { font-size: 1.1rem; min-height: 2.2em; margin: 8px 0; color: #FFEB3B; }
         #inventory { background: rgba(0,0,0,0.4); border: 2px solid #8B4513; border-radius: 8px; padding: 12px; margin-top: 16px; }
         #inventory h3 { margin: 0 0 10px; font-size: 1.2rem; color: #FFD700; text-align: center; }
-        .item-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; }
+        .item-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 10px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 12px;
+            justify-items: center;          /* centers items in their cells */
+        }
         .item {
             background: rgba(255,255,255,0.1); border-radius: 8px; padding: 8px; text-align: center; cursor: pointer;
             border: 2px solid transparent; transition: all 0.15s; font-size: 2.2rem; position: relative;
@@ -380,3 +388,4 @@ modal.addEventListener('click',e=>{if(e.target===modal)modal.style.display='none
 </script>
 </body>
 </html>
+
