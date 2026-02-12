@@ -33,18 +33,27 @@
             background-color: #fff;
             border: 2px solid #000;
             margin: 0 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-size: 50px; /* Big emojis */
             overflow: hidden;
             position: relative;
         }
-        .symbol {
+        .reel-strip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             position: absolute;
             top: 0;
-            transition: top 0.1s linear;
+            left: 0;
+            width: 100%;
+            transition: transform 1.5s ease-out;
+        }
+        .symbol {
+            height: 100px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 60px; /* Larger emojis for better visibility */
+            box-sizing: border-box;
         }
         #spin-button {
             background-color: #FFD700; /* Gold for fortune */
@@ -78,9 +87,9 @@
         <h1>Guerrilla Gardener's Fortune</h1>
         <div id="balance">Seed Credits: 100</div>
         <div class="reels">
-            <div class="reel" id="reel1"></div>
-            <div class="reel" id="reel2"></div>
-            <div class="reel" id="reel3"></div>
+            <div class="reel" id="reel1"><div class="reel-strip"></div></div>
+            <div class="reel" id="reel2"><div class="reel-strip"></div></div>
+            <div class="reel" id="reel3"><div class="reel-strip"></div></div>
         </div>
         <button id="spin-button">Spin to Plant!</button>
         <div id="message"></div>
@@ -89,11 +98,15 @@
     <script>
         const symbols = ['🌱', '🌿', '🌳', '🛠️', '💧']; // Guerrilla gardening symbols
         const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+        const reelStrips = reels.map(reel => reel.querySelector('.reel-strip'));
         const spinButton = document.getElementById('spin-button');
         const balanceDisplay = document.getElementById('balance');
         const messageDisplay = document.getElementById('message');
         let balance = 100;
         const spinCost = 10;
+        const symbolHeight = 100;
+        const visibleSymbols = 3; // Visible in the reel window
+        const extraSymbols = 20; // Extra for spinning effect (looping strip)
         const winAmounts = {
             '🌱': 20,  // Seed match: Small win for starting small
             '🌿': 30,  // Herb: Medium for quick growth
@@ -102,33 +115,99 @@
             '💧': 25   // Water: Essential boost
         };
 
-        function createSymbols(reel) {
-            reel.innerHTML = ''; // Clear previous
-            for (let i = 0; i < 3; i++) { // Show 3 symbols per reel for visibility
-                const symbol = document.createElement('div');
-                symbol.classList.add('symbol');
-                symbol.textContent = getRandomSymbol();
-                reel.appendChild(symbol);
-            }
-        }
-
         function getRandomSymbol() {
             return symbols[Math.floor(Math.random() * symbols.length)];
         }
 
-        function animateSpin(reel, finalSymbol) {
-            const symbolsInReel = reel.querySelectorAll('.symbol');
-            let offset = 0;
-            const interval = setInterval(() => {
-                offset -= 100; // Move symbols up by height
-                symbolsInReel.forEach(sym => sym.style.top = `${offset}px`);
-                if (offset <= -200) { // After "spinning" past 2 symbols
-                    clearInterval(interval);
-                    // Set final visible symbol (middle one)
-                    symbolsInReel[1].textContent = finalSymbol;
-                    symbolsInReel.forEach(sym => sym.style.top = '0px'); // Reset position
-                }
-            }, 100);
+        function createStrip(reelStrip) {
+            reelStrip.innerHTML = ''; // Clear previous
+            for (let i = 0; i < visibleSymbols + extraSymbols; i++) {
+                const symbol = document.createElement('div');
+                symbol.classList.add('symbol');
+                symbol.textContent = getRandomSymbol();
+                reelStrip.appendChild(symbol);
+            }
+        }
+
+        function spinReel(reelStrip, finalSymbol, delay) {
+            // Reset to top
+            reelStrip.style.transition = 'none';
+            reelStrip.style.transform = `translateY(0px)`;
+            
+            // Force reflow
+            reelStrip.offsetHeight;
+            
+            // Set spin
+            const spinDistance = (extraSymbols + Math.floor(Math.random() * visibleSymbols)) * symbolHeight;
+            reelStrip.style.transition = 'transform 1.5s ease-out';
+            reelStrip.style.transform = `translateY(-${spinDistance}px)`;
+
+            // After animation, set the middle symbol to final (but since it's random strip, calculate stop position)
+            // Actually, to land on specific, prepend symbols to make final in middle
+            // But for simplicity, after spin, adjust the last few symbols
+            setTimeout(() => {
+                // Get current children
+                const syms = Array.from(reelStrip.children);
+                
+                // Set bottom (visible[2]), middle[1], top[0] but since translated, the visible are the last 3
+                // To make middle finalSymbol, set the (extra + 1)th to final (since spinDistance lands last-visible at middle? Wait.
+                // Easier: After animation, snap to nearest, but to control, let's calculate stop to have final in middle.
+                
+                // Since random strip, to force final in middle: After generating random strip, override the one that will be in middle.
+                // But since spin is random distance, choose distance so that a specific index is in middle.
+                
+                // Let's define: After spin, the translateY will be such that the (spinCycles * total + offset) symbol is at top.
+                // Simple way: Generate strip with extra, spin by large amount, then at end, set translateY to - (totalHeight - reelHeight / 2 + symbolHeight / 2) but to control.
+                
+                // Better: Decide the final position first.
+                // The visible symbols will be index N, N+1, N+2 where N is chosen so N+1 is the winning one.
+                // But the winning symbol is the middle one.
+                
+                // So, for each reel, choose the final middle symbol, then build the strip with random, but set the 'landing' position.
+                // Choose a random stopIndex for the strip, and set the symbol at stopIndex +1 to finalSymbol.
+                
+                const stopIndex = Math.floor(Math.random() * extraSymbols); // Which 'start' for the last spin
+                const middleIndex = visibleSymbols / 2; // 1 for 3 visible
+                syms[stopIndex + 1].textContent = finalSymbol; // Set the one that will be middle
+                
+                // The translateY to land stopIndex at top of visible
+                const finalTranslate = - (stopIndex * symbolHeight);
+                reelStrip.style.transform = `translateY(${finalTranslate}px)`;
+            }, 1500 + delay); // No, wait, this is after the initial spin animation.
+            
+            // Actually, to have smooth stop, the transition is the spin, but to force the symbol, I need to set it before spin or after without notice.
+            // Let's set the final symbols after the animation ends.
+            // But to avoid jump, set them all random, spin, then no need to set specific during, but wait, the finalSymbols are the middle ones after stop.
+            
+            // Wait, to fix, let's change approach: The finalSymbol is the middle after stop.
+            // But to get it, after animation end, get the middle visible symbol.
+            // But to control win, I need to choose finalSymbol first, then make the strip land on it.
+            // Yes, so:
+            // Before spin, generate strip random, but override a specific position with finalSymbol.
+            // Choose a random spinCycles (e.g., 5 + random), then the position = cycles * symbols.length or something, but since symbols are random, but to make it simple.
+            
+            // Here's a clean way:
+            // Generate a long strip of random symbols.
+            // Choose a random spinAmount (number of symbols to shift).
+            // Set the symbol at spinAmount +1 (for middle) to finalSymbol.
+            // Then animate translateY - (spinAmount * height)
+            
+            // Yes!
+        }
+
+        function prepareStrip(reelStrip, finalSymbol) {
+            reelStrip.innerHTML = '';
+            for (let i = 0; i < visibleSymbols + extraSymbols; i++) {
+                const symbol = document.createElement('div');
+                symbol.classList.add('symbol');
+                symbol.textContent = getRandomSymbol();
+                reelStrip.appendChild(symbol);
+            }
+            const spinAmount =  extraSymbols - Math.floor(Math.random() * 3); // Vary a bit for different stops
+            const middlePosition = spinAmount + 1; // 0 is top, 1 middle, 2 bottom for visible after translate
+            // After translate - (spinAmount * height), the symbol at index spinAmount will be at top of reel, spinAmount+1 at middle, spinAmount+2 at bottom.
+            reelStrip.children[middlePosition].textContent = finalSymbol;
+            return spinAmount * symbolHeight;
         }
 
         function spin() {
@@ -143,16 +222,19 @@
             spinButton.disabled = true;
 
             const finalSymbols = reels.map(() => getRandomSymbol());
-
-            reels.forEach((reel, index) => {
-                createSymbols(reel); // Reset with random for animation
-                animateSpin(reel, finalSymbols[index]);
+            reelStrips.forEach((reelStrip, index) => {
+                const spinDistance = prepareStrip(reelStrip, finalSymbols[index]);
+                reelStrip.style.transition = 'none';
+                reelStrip.style.transform = 'translateY(0px)';
+                reelStrip.offsetHeight; // Reflow
+                reelStrip.style.transition = 'transform 1.5s ease-out';
+                reelStrip.style.transform = `translateY(-${spinDistance}px)`;
             });
 
             setTimeout(() => {
                 checkWin(finalSymbols);
                 spinButton.disabled = false;
-            }, 1500); // Time for animation
+            }, 2000); // Slightly longer for animation
         }
 
         function checkWin(finalSymbols) {
@@ -174,7 +256,7 @@
         }
 
         // Initialize reels
-        reels.forEach(createSymbols);
+        reelStrips.forEach((strip) => createStrip(strip));
         spinButton.addEventListener('click', spin);
     </script>
 </body>
